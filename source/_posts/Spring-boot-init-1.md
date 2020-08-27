@@ -1,8 +1,7 @@
 ---
 title: Spring boot init 1
 date: 2020-08-27 14:47:46
-tags: spring,springboot
-categories: 技术,spring,springboot
+tags: ['Spring', 'SpringBoot']
+categories: ['技术', 'Spring', 'SpringBoot']
 ---
 
-意见建议联系邮件: [yaoqijunmail@foxmail.com](mailto:yaoqijunmail@foxmail.com)
