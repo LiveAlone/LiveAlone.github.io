@@ -5,4 +5,4 @@ tags: spring,springboot
 categories: 技术,spring,springboot
 ---
 
-打赏链接: [title](/2020/08/22/HelloWorld/index.html)
+意见建议联系邮件: [yaoqijunmail@foxmail.com](mailto:yaoqijunmail@foxmail.com)

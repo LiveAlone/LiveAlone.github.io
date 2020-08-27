@@ -8,6 +8,5 @@ categories: 随感
 工作4, 5年的小白, 主要做java后端开发, 一路自己摸过来的，会的比较杂，也不是很深。
 做过业务模块订单, 支付, 基础数据平台, Es 服务搜索, 社区笔记评论, 用户关系维护, 各种业务。
 以前专注代码逻辑, 项目结构。 最近发现沟通能力很差，表达没有逻辑结构(可能想法有🤥)。想借博客梳理锻炼一下。
-水平不高, 技术有限, 局限的视角来表达。
-意见建议联系我的邮件: [mail](mailto:yaoqijunmail@foxmail.com)
-打赏, 是个鼓励，固定金额， 犹豫就不用，不指这个: ![img](/images/avatar2.jpg)
+水平不高, 技术有限, 局限的视角来表达中间件使用看法。
+意见建议联系邮件: [yaoqijunmail@foxmail.com](mailto:yaoqijunmail@foxmail.com)
