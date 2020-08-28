@@ -20,21 +20,20 @@
     var CONFIG = {"hostname":"blog.yaoqijun.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="why so serious">
+  <meta name="description" content="本次想说说Spring boot构建运行方式。项目中， 一般SpringBoot提供的maven插件 spring-boot-maven-plugin 打包构建项目， 生成Jar,War构建，线上通过命令方式运行构建。Spring构建时候，会把对应的资源都打包进入输出构建中。 联想到以前的Client项目， Web项目，手动去拷贝部署一堆资源，方便了很多。之前做一个需求，自定义 ClassLoad">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Spring boot init 1">
-<meta property="og:url" content="http://blog.yaoqijun.site/2020/08/27/Spring-boot-init-1/index.html">
+<meta property="og:title" content="SpringBoot Jar 运行方式">
+<meta property="og:url" content="http://blog.yaoqijun.site/2020/08/28/SpringBootJarLauncher/index.html">
 <meta property="og:site_name" content="joker">
-<meta property="og:description" content="why so serious">
+<meta property="og:description" content="本次想说说Spring boot构建运行方式。项目中， 一般SpringBoot提供的maven插件 spring-boot-maven-plugin 打包构建项目， 生成Jar,War构建，线上通过命令方式运行构建。Spring构建时候，会把对应的资源都打包进入输出构建中。 联想到以前的Client项目， Web项目，手动去拷贝部署一堆资源，方便了很多。之前做一个需求，自定义 ClassLoad">
 <meta property="og:locale">
-<meta property="article:published_time" content="2020-08-27T06:47:46.000Z">
-<meta property="article:modified_time" content="2020-08-27T18:06:02.442Z">
+<meta property="article:published_time" content="2020-08-28T02:56:29.000Z">
+<meta property="article:modified_time" content="2020-08-28T08:46:31.735Z">
 <meta property="article:author" content="joker">
-<meta property="article:tag" content="Spring">
-<meta property="article:tag" content="SpringBoot">
+<meta property="article:tag" content="java">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://blog.yaoqijun.site/2020/08/27/Spring-boot-init-1/">
+<link rel="canonical" href="http://blog.yaoqijun.site/2020/08/28/SpringBootJarLauncher/">
 
 
 <script id="page-configurations">
@@ -47,7 +46,7 @@
   };
 </script>
 
-  <title>Spring boot init 1 | joker</title>
+  <title>SpringBoot Jar 运行方式 | joker</title>
   
 
 
@@ -168,7 +167,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
-    <link itemprop="mainEntityOfPage" href="http://blog.yaoqijun.site/2020/08/27/Spring-boot-init-1/">
+    <link itemprop="mainEntityOfPage" href="http://blog.yaoqijun.site/2020/08/28/SpringBootJarLauncher/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.jpg">
@@ -181,7 +180,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Spring boot init 1
+          SpringBoot Jar 运行方式
         </h1>
 
         <div class="post-meta">
@@ -190,32 +189,9 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
+              
 
-              <time title="Created: 2020-08-27 14:47:46" itemprop="dateCreated datePublished" datetime="2020-08-27T14:47:46+08:00">2020-08-27</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-08-28 02:06:02" itemprop="dateModified" datetime="2020-08-28T02:06:02+08:00">2020-08-28</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">In</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">技术</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%8A%80%E6%9C%AF/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
-                </span>
-                  , 
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/%E6%8A%80%E6%9C%AF/Spring/SpringBoot/" itemprop="url" rel="index"><span itemprop="name">SpringBoot</span></a>
-                </span>
+              <time title="Created: 2020-08-28 10:56:29 / Modified: 16:46:31" itemprop="dateCreated datePublished" datetime="2020-08-28T10:56:29+08:00">2020-08-28</time>
             </span>
 
           
@@ -229,7 +205,55 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        
+        <p>本次想说说Spring boot构建运行方式。项目中， 一般SpringBoot提供的maven插件 <code>spring-boot-maven-plugin</code> 打包构建项目， 生成Jar,War构建，线上通过命令方式运行构建。Spring构建时候，会把对应的资源都打包进入输出构建中。 联想到以前的Client项目， Web项目，手动去拷贝部署一堆资源，方便了很多。之前做一个需求，自定义 ClassLoader 动态加载模块，惊奇发现，业务ClassLoader是 <code>org.springframework.boot.loader.LaunchedURLClassLoader</code>，并不是我们熟知的 <code>sun.misc.Launcher$AppClassLoader</code>, 显然 BootLoader 做了一些事情。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.boot.loader.LaunchedURLClassLoader@<span class="number">238e0d</span>81</span><br><span class="line">sun.misc.Launcher$AppClassLoader@<span class="number">42</span>a57993</span><br><span class="line">sun.misc.Launcher$ExtClassLoader@<span class="number">531d</span>72ca</span><br></pre></td></tr></table></figure>
+
+<p>通过打印 ClassLoader 继承关系, 可以发现Spring 自定义了LaunchedUrlClassLoader -&gt; UrlClassLoader(一般自定义Jar Rresource 通过继承这个ClassLoader去实现), 就是通过这个Loader, jar 运行时刻，都通加载 BOOT-INF 中lib 数据。</p>
+<p>我们知道通过 <code>java -jar XXX.jar</code> 运行的java进程 系统默认loader继承关系是 <code>AppClassLoader -&gt; ExtClassLoader -&gt; BootClassLoader(null)</code>， web 项目 tomcat 通过继承ClassLoader 实现项目资源隔离，SpringBoot 通过 LaunchedURLClassLoader 动态加载我们依赖的Lib 资源文件。</p>
+<p>boot jar 资源目录结构</p>
+<ul>
+<li>\<ul>
+<li>BOOT-INF (springBootLoader 加载资源文件)<ul>
+<li>lib  (项目依赖资源文件)</li>
+<li>classes (项目业务文件)</li>
+<li>classpath.idx (依赖文件列表)</li>
+</ul>
+</li>
+<li>META-INF (maven 和 MANIFEST.MF 相关信息)</li>
+<li>org.springframework.boot.loader (spring 自定义Loader 逻辑)</li>
+</ul>
+</li>
+</ul>
+<p>MAINFEST.MF 定义 java 启动信息, MainClass 替换Spring 提供的 JarLauncher 启动Class，代码可以通过SpringBoot-tools-loader 源码逻辑</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Manifest-Version: 1.0</span><br><span class="line">Spring-Boot-Classpath-Index: BOOT-INF&#x2F;classpath.idx</span><br><span class="line">Implementation-Title: source-demo</span><br><span class="line">Implementation-Version: 1.0-SNAPSHOT</span><br><span class="line">Start-Class: org.yqj.source.demo.BootDemoApplication</span><br><span class="line">Spring-Boot-Classes: BOOT-INF&#x2F;classes&#x2F;</span><br><span class="line">Spring-Boot-Lib: BOOT-INF&#x2F;lib&#x2F;</span><br><span class="line">Build-Jdk-Spec: 1.8</span><br><span class="line">Spring-Boot-Version: 2.3.3.RELEASE</span><br><span class="line">Created-By: Maven Jar Plugin 3.2.0</span><br><span class="line">Main-Class: org.springframework.boot.loader.JarLauncher</span><br></pre></td></tr></table></figure>
+
+<p>Launcher 之间的继承关系</p>
+<ul>
+<li>Launcher (mainThread 启动类, abstract)<ul>
+<li>ExecutableArchiveLauncher ()<ul>
+<li>JarLauncher ()</li>
+<li>WarLauncher ()</li>
+</ul>
+</li>
+<li>PropertiesLauncher ()</li>
+</ul>
+</li>
+</ul>
+<p>项目通过配置 spring-boot-maven-plugin 参数设定打包方式, 项目一般打包成可运行Jar, JarLauncher Main 方法运行入口， 而不同构建 Launcher.launch() 运行启动上下文, <code>org.springframework.boot.loader.Launcher#launch(java.lang.String[])</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">launch</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!isExploded()) &#123;</span><br><span class="line">        JarFile.registerUrlProtocolHandler();</span><br><span class="line">    &#125;</span><br><span class="line">    ClassLoader classLoader = createClassLoader(getClassPathArchivesIterator());</span><br><span class="line">    String jarMode = System.getProperty(<span class="string">&quot;jarmode&quot;</span>);</span><br><span class="line">    String launchClass = (jarMode != <span class="keyword">null</span> &amp;&amp; !jarMode.isEmpty()) ? JAR_MODE_LAUNCHER : getMainClass();</span><br><span class="line">    launch(args, launchClass, classLoader);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>registerUrlProtocolHandler 注册 <code>java.protocol.handler.pkgs</code> 使用 URLStreamHandler 动态Loader Url Jar目录文件</li>
+<li>创建ClassLoader，这里 LaunchedURLClassLoader spring 自定义ClassLoader, 加载了依赖的 Archives(依赖模块)</li>
+<li>Jarmode vs Main-Class<ol>
+<li>JarMode 模式获取所有 spring_factory 配置中 jarmode 方法。(for run 方式，感觉打包多模块定时任务)</li>
+<li>业务 Main-Class 启动方法入口。</li>
+</ol>
+</li>
+</ol>
+<p>剩余的launcher, 设置线程ContextClassLoader, 保证业务代码资源正常加载。反射执行 MainClass。</p>
+<p>JarLauncher WarLauncher 继承来自 ExecutableAchiveLauncher, Archive 中定义资源类型接口, 定义Jar 文件, NestJar 不同数据信息的解析。 不再赘述了。<br>特别Launcher, PropertiesLauncher 这个Launcher帮助我们在包外指定配置加载，通过启动参数方式。 </p>
+
     </div>
 
     
@@ -257,10 +281,6 @@
 
 
       <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/Spring/" rel="tag"># Spring</a>
-              <a href="/tags/SpringBoot/" rel="tag"># SpringBoot</a>
-          </div>
 
         
 
@@ -268,13 +288,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2020/08/22/HelloWorld/" rel="prev" title="Hello World">
-      <i class="fa fa-chevron-left"></i> Hello World
+    <a href="/2020/08/27/Spring-boot-init-1/" rel="prev" title="Spring boot init 1">
+      <i class="fa fa-chevron-left"></i> Spring boot init 1
     </a></div>
-      <div class="post-nav-item">
-    <a href="/2020/08/28/SpringBootJarLauncher/" rel="next" title="SpringBoot Jar 运行方式">
-      SpringBoot Jar 运行方式 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
