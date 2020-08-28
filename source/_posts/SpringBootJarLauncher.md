@@ -1,8 +1,8 @@
 ---
 title: SpringBoot Jar 运行方式
 date: 2020-08-28 10:56:29
-tags:
-categories:
+tags: ['Spring', 'SpringBoot']
+categories: ['技术', 'Spring', 'SpringBoot']
 ---
 
 
