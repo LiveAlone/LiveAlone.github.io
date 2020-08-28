@@ -5,6 +5,7 @@ tags:
 categories:
 ---
 
+
 本次想说说Spring boot构建运行方式。项目中， 一般SpringBoot提供的maven插件 ```spring-boot-maven-plugin``` 打包构建项目， 生成Jar,War构建，线上通过命令方式运行构建。Spring构建时候，会把对应的资源都打包进入输出构建中。 联想到以前的Client项目， Web项目，手动去拷贝部署一堆资源，方便了很多。之前做一个需求，自定义 ClassLoader 动态加载模块，惊奇发现，业务ClassLoader是 ```org.springframework.boot.loader.LaunchedURLClassLoader```，并不是我们熟知的 ```sun.misc.Launcher$AppClassLoader```, 显然 BootLoader 做了一些事情。
 
 ```java
