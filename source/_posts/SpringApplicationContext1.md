@@ -1,6 +1,5 @@
 ---
 title: SpringApplicationContext1
-date: 2020-09-01 15:04:17
 tags:
   - Spring
   - SpringBoot
@@ -8,7 +7,9 @@ categories:
   - 技术
   - Spring
   - SpringBoot
+date: 2020-09-01 15:04:17
 ---
+
 
 ApplicationContext 数据创建build, SpringApplication 不同的服务类型， 创建不同的ApplicationContext。
 
