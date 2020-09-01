@@ -8,3 +8,4 @@ categories: ["技术", "todo", "list"]
 spring 相关文档todo list
 
     1. SpringApplicationRunListener 实现 EventPublishingRunListener
+    2. ConfiguableEnvoirment prefix, configEnv 转换注入方式。
