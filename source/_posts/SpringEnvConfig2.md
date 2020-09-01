@@ -1,6 +1,5 @@
 ---
 title: Spring Environment Config 2
-date: 2020-09-01 01:38:10
 tags:
   - Spring
   - SpringBoot
@@ -8,7 +7,9 @@ categories:
   - 技术
   - Spring
   - SpringBoot
+date: 2020-09-01 01:38:10
 ---
+
 
 想说明一下 Spring Enviroment 加载不同来源的 配置文件。
 
@@ -96,5 +97,28 @@ List<EnvironmentPostProcessor> loadPostProcessors() {
 - DebugAgentEnvironmentPostProcessor
 - SpringBootTestRandomPortEnvironmentPostProcessor
 
-不同Processor 配置文件加载方式 配置文件处理方式 TODO org.springframework.boot.context.config.ConfigFileApplicationListener#onApplicationEnvironmentPreparedEvent
-postProcessEnvironment
+ConfigFileApplicationListener 添加配置文件 PropertySource 配置资源文件，加载配置方式
+
+```java
+protected void addPropertySources(ConfigurableEnvironment environment, ResourceLoader resourceLoader) {
+    RandomValuePropertySource.addToEnvironment(environment);
+    new Loader(environment, resourceLoader).load();
+}
+
+// loader 初始化
+Loader(ConfigurableEnvironment environment, ResourceLoader resourceLoader) {
+    this.environment = environment;
+    this.placeholdersResolver = new PropertySourcesPlaceholdersResolver(this.environment);
+    this.resourceLoader = (resourceLoader != null) ? resourceLoader : new DefaultResourceLoader(null);
+    this.propertySourceLoaders = SpringFactoriesLoader.loadFactories(PropertySourceLoader.class,
+            getClass().getClassLoader());
+}
+
+// spring.factories
+# PropertySource Loaders
+org.springframework.boot.env.PropertySourceLoader=\
+org.springframework.boot.env.PropertiesPropertySourceLoader,\
+org.springframework.boot.env.YamlPropertySourceLoader
+```
+
+上面loader 初始化，通过SpringFactory 获取 PropertySourceLoader 配置文件加载类目， 可以看到 properties xml， yaml yml, 配置文件加载。 ```org.springframework.boot.context.config.ConfigFileApplicationListener.Loader``` 加载配置文件，结合但是 profile， 相对复杂，专题沟通。 所以， 配置环境中扩展配置，可以 spring.factories 继承PropertySourceLoader 实现配置load, 或者自定义 Env Listener 插入对应 PropertySource 资源。

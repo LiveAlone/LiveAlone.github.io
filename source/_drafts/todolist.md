@@ -9,3 +9,4 @@ spring 相关文档todo list
 
     1. SpringApplicationRunListener 实现 EventPublishingRunListener
     2. ConfiguableEnvoirment prefix, configEnv 转换注入方式。
+    3. org.springframework.boot.context.config.ConfigFileApplicationListener.Loader loader file 文件
