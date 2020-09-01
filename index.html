@@ -164,6 +164,145 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://blog.yaoqijun.site/2020/09/01/SpringApplicationContext1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="joker">
+      <meta itemprop="description" content="why so serious">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="joker">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/09/01/SpringApplicationContext1/" class="post-title-link" itemprop="url">SpringApplicationContext1</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-09-01 15:04:17" itemprop="dateCreated datePublished" datetime="2020-09-01T15:04:17+08:00">2020-09-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-09-02 00:35:57" itemprop="dateModified" datetime="2020-09-02T00:35:57+08:00">2020-09-02</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">技术</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/Spring/SpringBoot/" itemprop="url" rel="index"><span itemprop="name">SpringBoot</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>ApplicationContext 数据创建build, SpringApplication 不同的服务类型， 创建不同的ApplicationContext。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String DEFAULT_CONTEXT_CLASS = <span class="string">&quot;org.springframework.context.&quot;</span></span><br><span class="line">        + <span class="string">&quot;annotation.AnnotationConfigApplicationContext&quot;</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String DEFAULT_SERVLET_WEB_CONTEXT_CLASS = <span class="string">&quot;org.springframework.boot.&quot;</span></span><br><span class="line">        + <span class="string">&quot;web.servlet.context.AnnotationConfigServletWebServerApplicationContext&quot;</span>;</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String DEFAULT_REACTIVE_WEB_CONTEXT_CLASS = <span class="string">&quot;org.springframework.&quot;</span></span><br><span class="line">        + <span class="string">&quot;boot.web.reactive.context.AnnotationConfigReactiveWebServerApplicationContext&quot;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>Spring BeanUtils 初始化 org.springframework.context.annotation.AnnotationConfigApplicationContext, init constructor。 ApplicationContext 继承来自 BeanFactory 接口继承关系 <img src="/images/20200901/BeanFactory.png" alt="BeanFactory"></p>
+<ul>
+<li>BeanFactory spring bean 管理工厂<ul>
+<li>ListableBeanFactory 支持通过Name Class Annotation 获取BeanList 遍历查询操作</li>
+<li>HierarchicalBeanFactory BeanFactory 继承关系<ul>
+<li>ConfigurableBeanFactory, ConfigurableListableBeanFactory 配置化 benaFactory 工厂</li>
+</ul>
+</li>
+<li>AutowireCapableBeanFactory 自动注入非Spring 管理Bean 类型</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationContext</span> <span class="keyword">extends</span> <span class="title">EnvironmentCapable</span>, <span class="title">ListableBeanFactory</span>, <span class="title">HierarchicalBeanFactory</span>,</span></span><br><span class="line"><span class="class">    <span class="title">MessageSource</span>, <span class="title">ApplicationEventPublisher</span>, <span class="title">ResourcePatternResolver</span> </span>&#123;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>ApplicationContext 继承了 BeanFactory,EventPublisher,ResourceLoader,MessageSource 上下列表。 ApplicationContext 继承接口实现 <img src="/images/20200901/ApplicationContext.png" alt="ApplicationContext"></p>
+<ul>
+<li>ConfigurableApplicationContext 基础实现，支持 add BeanFactoryPostProcessor, beanFactory 处理器添加<ul>
+<li>WebServerApplicationContext, ReactiveWebApplicationContext web page 上下文， WebServer 服务获取<ul>
+<li>ConfigurableWebServerApplicationContext，ConfigurableReactiveWebApplicationContext webApplicationContext上下文支持</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>不同ApplicationContext 上下文的实现环境 <img src="/images/20200901/AbstractApplicationContext.png" alt="AbstractApplicationContext"></p>
+<p>AnnotationConfigApplicationContext applicationContext bean 上下文定义注册方式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AnnotationConfigApplicationContext</span> <span class="keyword">extends</span> <span class="title">GenericApplicationContext</span> <span class="keyword">implements</span> <span class="title">AnnotationConfigRegistry</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> AnnotatedBeanDefinitionReader reader; <span class="comment">// annotation 注册使用BeanDefinition</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ClassPathBeanDefinitionScanner scanner;   <span class="comment">// scanner 扫描对应的 package 加载 Bean 定义方式</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>SpringApplication 核心Context <code>prepareContext, refreshContext, afterRefresh</code> context 配置修改</p>
+<h5 id="prepareContext-context"><a href="#prepareContext-context" class="headerlink" title="prepareContext() context"></a>prepareContext() context</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">prepareContext</span><span class="params">(ConfigurableApplicationContext context, ConfigurableEnvironment environment,</span></span></span><br><span class="line"><span class="function"><span class="params">        SpringApplicationRunListeners listeners, ApplicationArguments applicationArguments, Banner printedBanner)</span> </span>&#123;</span><br><span class="line">    context.setEnvironment(environment);</span><br><span class="line">    postProcessApplicationContext(context);</span><br><span class="line">    applyInitializers(context);</span><br><span class="line">    listeners.contextPrepared(context);</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.logStartupInfo) &#123;</span><br><span class="line">        logStartupInfo(context.getParent() == <span class="keyword">null</span>);</span><br><span class="line">        logStartupProfileInfo(context);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Add boot specific singleton beans</span></span><br><span class="line">    ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();</span><br><span class="line">    beanFactory.registerSingleton(<span class="string">&quot;springApplicationArguments&quot;</span>, applicationArguments);</span><br><span class="line">    <span class="keyword">if</span> (printedBanner != <span class="keyword">null</span>) &#123;</span><br><span class="line">        beanFactory.registerSingleton(<span class="string">&quot;springBootBanner&quot;</span>, printedBanner);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (beanFactory <span class="keyword">instanceof</span> DefaultListableBeanFactory) &#123;</span><br><span class="line">        ((DefaultListableBeanFactory) beanFactory)</span><br><span class="line">                .setAllowBeanDefinitionOverriding(<span class="keyword">this</span>.allowBeanDefinitionOverriding);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.lazyInitialization) &#123;</span><br><span class="line">        context.addBeanFactoryPostProcessor(<span class="keyword">new</span> LazyInitializationBeanFactoryPostProcessor());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// Load the sources</span></span><br><span class="line">    Set&lt;Object&gt; sources = getAllSources();</span><br><span class="line">    Assert.notEmpty(sources, <span class="string">&quot;Sources must not be empty&quot;</span>);</span><br><span class="line">    load(context, sources.toArray(<span class="keyword">new</span> Object[<span class="number">0</span>]));</span><br><span class="line">    listeners.contextLoaded(context);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>postProcessApplicationContext(context) 预处理相关ApplicationContext, 设置BeanNameGenerate, resourceLoader, ConversionService 配置Bean 属性Config。</li>
+<li>ApplicationContextInitializer context 环境初始化， 下面会详细讲述</li>
+<li>执行 ApplicationListeners 线程同步执行监听器, 发放 ContextPreparedEvent 提供监听。</li>
+<li>注册 <code>springApplicationArguments, springBootBanner</code> application Spring bean 对象</li>
+<li>allowBeanDefinitionOverriding 默认true， 定义false， 不允许同名BeanDefinition 覆盖操作。</li>
+<li>load beans to ApplicationContext， app 上下文加载beans</li>
+<li>contextedLoaded 事件监听分发</li>
+</ol>
+<p>不同的Listener 注册对应的Bean， 但是不希望直接操作 ApplicationContext, 通过添加BeanFactoryProcessor, 走正常的 ApplicationContext 初始化流程。</p>
+<h5 id="ApplicationContextInitializer-context-初始化"><a href="#ApplicationContextInitializer-context-初始化" class="headerlink" title="ApplicationContextInitializer context 初始化"></a>ApplicationContextInitializer context 初始化</h5><p>通过 spring.factory 配置文件， 获取 ApplicationContextInitializer 初始化Bean。 initApplicationContext 包含</p>
+<ul>
+<li>DelegatingApplicationContextInitializer <code>context.initializer.classes</code> 执行这些用户定制化的 init class bean</li>
+<li>SharedMetadataReaderFactoryContextInitializer 添加 CachingMetadataReaderFactoryPostProcessor beanPostProcessor</li>
+<li>ContextIdApplicationContextInitializer 初始化ContextId, 设置ApplicationContext ContextId, 注册Bean</li>
+<li>ConfigurationWarningsApplicationContextInitializer 添加 ConfigurationWarningsPostProcessor</li>
+<li>RSocketPortInfoApplicationContextInitializer 添加 RSocketServerInitializedEvent rsocket 初始化监听事件</li>
+<li>ServerPortInfoApplicationContextInitializer WebServerInitializedEvent webServer 事件监听。</li>
+<li>ConditionEvaluationReportLoggingListener ConditionEvaluationReportListener 添加Listener</li>
+</ul>
+<p>可以看到，执行初始化监听者时候， 注入不同的 Processor Listener， ApplicaitonContext 本身留有很多 hook， 执行定制化需求。</p>
+<h4 id="applicationContext-load-resources"><a href="#applicationContext-load-resources" class="headerlink" title="applicationContext load resources"></a>applicationContext load resources</h4><p>AnnotationBean 注册启动Class, BootDemoApplication(用户自定义启动bean类型)， 通过Class 注册第一个 BeanDefinition 定义类型。</p>
+<h4 id="refresh-application-context"><a href="#refresh-application-context" class="headerlink" title="refresh application context"></a>refresh application context</h4><p>刷新application context 这里会 load 所有的Bean，完整执行流程， 后面沟通</p>
+<h4 id="after-refresh"><a href="#after-refresh" class="headerlink" title="after refresh"></a>after refresh</h4><p>customer 自定义继承实现， 这个时候， application 已经完成 Context 完成加载。 这个地方个人理解， 是一个和 ApplicationContext(BeanFactory) 不相关的一个初始化。 其实在 ApplicaitonContext 中， 也会有Hook, customer 自定义容器相关的初始化。 FIN</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://blog.yaoqijun.site/2020/09/01/SpringEnvConfig2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -912,7 +1051,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
