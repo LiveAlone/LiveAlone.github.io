@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.0.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.yaoqijun.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="上一篇大概了解了 SpringApplication.Run() 运行初始化过程， 这次了解 EnviromentConfig 配置初始化。 propertySource 资源管理application 初始化时候， 创建DefaultApplicationArguments args 启动参数分装， 内部会对 args 分装PropertySource。 1234public abstract">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Environment Config 1">
+<meta property="og:url" content="http://blog.yaoqijun.site/2020/08/30/SpringEnvConfig1/index.html">
+<meta property="og:site_name" content="joker">
+<meta property="og:description" content="上一篇大概了解了 SpringApplication.Run() 运行初始化过程， 这次了解 EnviromentConfig 配置初始化。 propertySource 资源管理application 初始化时候， 创建DefaultApplicationArguments args 启动参数分装， 内部会对 args 分装PropertySource。 1234public abstract">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.yaoqijun.site/images/20200831/PropertySource.png">
+<meta property="og:image" content="http://blog.yaoqijun.site/images/20200831/PropertyResolver.png">
+<meta property="og:image" content="http://blog.yaoqijun.site/images/20200831/ConversionService.png">
+<meta property="article:published_time" content="2020-08-30T14:16:00.000Z">
+<meta property="article:modified_time" content="2020-08-31T17:33:36.316Z">
+<meta property="article:author" content="joker">
+<meta property="article:tag" content="Spring">
+<meta property="article:tag" content="SpringBoot">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.yaoqijun.site/images/20200831/PropertySource.png">
+
+<link rel="canonical" href="http://blog.yaoqijun.site/2020/08/30/SpringEnvConfig1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>Spring Environment Config 1 | joker</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">joker</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">why so serious</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://blog.yaoqijun.site/2020/08/30/SpringEnvConfig1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="joker">
+      <meta itemprop="description" content="why so serious">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="joker">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring Environment Config 1
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-08-30 22:16:00" itemprop="dateCreated datePublished" datetime="2020-08-30T22:16:00+08:00">2020-08-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-09-01 01:33:36" itemprop="dateModified" datetime="2020-09-01T01:33:36+08:00">2020-09-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">技术</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/Spring/SpringBoot/" itemprop="url" rel="index"><span itemprop="name">SpringBoot</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>上一篇大概了解了 SpringApplication.Run() 运行初始化过程， 这次了解 EnviromentConfig 配置初始化。</p>
+<h4 id="propertySource-资源管理"><a href="#propertySource-资源管理" class="headerlink" title="propertySource 资源管理"></a>propertySource 资源管理</h4><p>application 初始化时候， 创建DefaultApplicationArguments args 启动参数分装， 内部会对 args 分装PropertySource。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">PropertySource</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> String name; <span class="comment">// source 配置资源的名称</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> T source;   <span class="comment">// 资源配置类型, properties map 等等, MustableProperty 管理 name - sourceProperty 映射关系。</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面展示PropertySource 集成关系图片, 我们解析不同继承链实现方式。<br><img src="/images/20200831/PropertySource.png" alt="SourceProperty"></p>
+<ul>
+<li>StubPropertySource source 为null 站位资源类型<ul>
+<li>ComparisonPropertySource 为了集合比较 Source 资源类型</li>
+</ul>
+</li>
+<li>FilteredPropertySource PropertSource 封装， 包含一个 FilsterSet, 过滤PropertySource 中部分属性不可见</li>
+<li>ConfigurationPropertySourcesPropertySource 对 ConfigurationPropertySourcesPropertySource list 封装， 通过这个集成多souce 来源</li>
+<li>EnumerablePropertySource 我们知道 source 资源 T 抽象类型， Enum 定义 sourceName 可枚举比较<ul>
+<li>CompositePropertySource 多source来源组合封装方式</li>
+<li>DynamicValuesPropertySource source 抽象类型 <code>Map&lt;String, Supplier&lt;Object&gt;&gt;</code> 通过Supplier customer 自定提供对象逻辑</li>
+<li>CommandLinePropertySource，SimpleCommandLinePropertySource 这里 命令行参数 a=b,b=c 装换Source 格式化数据结构</li>
+<li>MapPropertySource source 定义类型 <code>Map&lt;String, Object&gt;</code><ul>
+<li>SystemEnvironmentPropertySource 系统配置Property 做一些参数名格式转换</li>
+<li>PropertiesPropertySource， JsonPropertySource， spring source 格式管理， 后面详细说明。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="Environment-配置环境上下文Context"><a href="#Environment-配置环境上下文Context" class="headerlink" title="Environment 配置环境上下文Context"></a>Environment 配置环境上下文Context</h4><p>Spring通过 Enviroment 管理启动环境上下文配置信息，profile 激活环境配置，不同Source Config yaml 配置来源。<br>Environment 继承关系关系图片 <img src="/images/20200831/PropertyResolver.png" alt="PropertyResolver"></p>
+<p>相关接口实现方式</p>
+<ul>
+<li>PropertyResolver 底层通过 PropertySource 支持 Property 属性获取<ul>
+<li>Environment 不同 profiles，理解激活环境，不同配置。@Profile 注解提供支持环境<ul>
+<li>ConfigurableEnvironment 支持配置换环境注入， profile 动态激活，MutablePropertySources 底层依赖，支持 merge(env) 多ConfigurableEnvironment 组合<ul>
+<li>ConfigurableReactiveWebEnvironment web 环境env</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>ConfigurablePropertyResolver ConversionService 用户定制化 source 对象转换</li>
+</ul>
+</li>
+</ul>
+<p>实现类型</p>
+<ul>
+<li>AbstractEnvironment 抽象env 实现对象<ul>
+<li>StandardEnvironment MutablePropertySource 多资源属性配置</li>
+<li>StandardReactiveWebEnvironment web reactive</li>
+</ul>
+</li>
+</ul>
+<p>笔记环境创建StandardEnvironment对象, SpringApplication 初始化创建 Env 过程</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> ConfigurableEnvironment <span class="title">prepareEnvironment</span><span class="params">(SpringApplicationRunListeners listeners,</span></span></span><br><span class="line"><span class="function"><span class="params">    ApplicationArguments applicationArguments)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// Create and configure the environment</span></span><br><span class="line">  ConfigurableEnvironment environment = getOrCreateEnvironment(); <span class="comment">// 当前App 类型， 创建对应的Env</span></span><br><span class="line">  configureEnvironment(environment, applicationArguments.getSourceArgs()); <span class="comment">// SpringApplication 添加添加环境启动一些 Env 配置信息</span></span><br><span class="line">  ConfigurationPropertySources.attach(environment);   <span class="comment">// 移除 attach properties 后面说</span></span><br><span class="line">  listeners.environmentPrepared(environment);   <span class="comment">// 通过 applicationListener env 加载对应的EnvProcessor</span></span><br><span class="line">  bindToSpringApplication(environment); <span class="comment">// 额外绑定操作等等</span></span><br><span class="line">  <span class="keyword">if</span> (!<span class="keyword">this</span>.isCustomEnvironment) &#123;</span><br><span class="line">    environment = <span class="keyword">new</span> EnvironmentConverter(getClassLoader()).convertEnvironmentIfNecessary(environment,</span><br><span class="line">        deduceEnvironmentClass());</span><br><span class="line">  &#125;</span><br><span class="line">  ConfigurationPropertySources.attach(environment);</span><br><span class="line">  <span class="keyword">return</span> environment;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>PropertySourcesPropertyResolver env 依赖底层配置Prperty Resolver 处理工具。 追踪 getProperty 处理方式。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">protected</span> &lt;T&gt; <span class="function">T <span class="title">getProperty</span><span class="params">(String key, Class&lt;T&gt; targetValueType, <span class="keyword">boolean</span> resolveNestedPlaceholders)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.propertySources != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (PropertySource&lt;?&gt; propertySource : <span class="keyword">this</span>.propertySources) &#123; <span class="comment">// 遍历所有的PropertySouce 资源列表内容，之前说过</span></span><br><span class="line">      <span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">        logger.trace(<span class="string">&quot;Searching for key &#x27;&quot;</span> + key + <span class="string">&quot;&#x27; in PropertySource &#x27;&quot;</span> +</span><br><span class="line">            propertySource.getName() + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      Object value = propertySource.getProperty(key); <span class="comment">// 查找包含了 key 的 PropertySource value</span></span><br><span class="line">      <span class="keyword">if</span> (value != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (resolveNestedPlaceholders &amp;&amp; value <span class="keyword">instanceof</span> String) &#123;</span><br><span class="line">          value = resolveNestedPlaceholders((String) value);</span><br><span class="line">        &#125;</span><br><span class="line">        logKeyFound(key, propertySource, value);</span><br><span class="line">        <span class="keyword">return</span> convertValueIfNecessary(value, targetValueType); <span class="comment">// ConversionService objectValue 进行数据转换</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">    logger.trace(<span class="string">&quot;Could not find key &#x27;&quot;</span> + key + <span class="string">&quot;&#x27; in any property source&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="ConfigurablePropertyResolver-ConfigurablePropertyResolver"><a href="#ConfigurablePropertyResolver-ConfigurablePropertyResolver" class="headerlink" title="ConfigurablePropertyResolver ConfigurablePropertyResolver"></a>ConfigurablePropertyResolver ConfigurablePropertyResolver</h4><p>ConfigurablePropertyResolver 提供用户定制化的Property 属性对象转换方式， 通过 ConversionService定制化<br><img src="/images/20200831/ConversionService.png" alt="ConversionService"></p>
+<ul>
+<li>ConversionService 类型转换服务，sourceClassType to targetClassType，通过convert TargetType 类型转换<ul>
+<li>CompositeConversionService 多ConversionService 组合转换方式</li>
+<li>ConfigurableConversionService interface 继承 支持 Converter 类型转换配置 config</li>
+<li>GenericConversionService 定义通用转换类型，分装不同的Converter 转换器<ul>
+<li>FormattingConversionService 格式化Format 类型转换方式</li>
+<li>TypeConverterConversionService type 类型转换</li>
+<li>DefaultConversionService 默认注册不同 Conversion</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>GenericConverter 通用Converter 单一类型转换方式， 通过ConvertiblePair 提供转换类型信息。</p>
+<h4 id="configure-配置-Env"><a href="#configure-配置-Env" class="headerlink" title="configure 配置 Env"></a>configure 配置 Env</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">configureEnvironment</span><span class="params">(ConfigurableEnvironment environment, String[] args)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.addConversionService) &#123;</span><br><span class="line">    ConversionService conversionService = ApplicationConversionService.getSharedInstance();</span><br><span class="line">    environment.setConversionService((ConfigurableConversionService) conversionService);  <span class="comment">// env 注册 ConversionService</span></span><br><span class="line">  &#125;</span><br><span class="line">  configurePropertySources(environment, args);</span><br><span class="line">  configureProfiles(environment, args);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>ApplicationConversionService 注册配置String Number 不同类型转换器执行。 StanderEnv 添加类型转换器。</li>
+<li>args 作为一种 PropertySource, 添加进入 Env 数据源中，我们知道 args 是优先级最高， source.addFirst</li>
+<li>添加env 环境的 Profile 上下文，支持激活上下文配置方式。</li>
+</ol>
+<figure class="highlight plain"><figcaption><span>configurationProperties 添加 PropertySource, 事件注入, 后面Listener 通过监听事件注入 (这个下一篇再讲)</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">#### bindingToSpringApplication binder 绑定SpringApplication 属性变量</span><br><span class="line"></span><br><span class="line">&#96;&#96;&#96;java</span><br><span class="line">protected void bindToSpringApplication(ConfigurableEnvironment environment) &#123;</span><br><span class="line">  try &#123;</span><br><span class="line">    Binder.get(environment).bind(&quot;spring.main&quot;, Bindable.ofInstance(this));  &#x2F;&#x2F; spring.main 配置内容 绑定我们 SpringApplication 中</span><br><span class="line">  &#125;</span><br><span class="line">  catch (Exception ex) &#123;</span><br><span class="line">    throw new IllegalStateException(&quot;Cannot bind to SpringApplication&quot;, ex);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Binder 对象属性绑定这， prefix “spaing.main” 配置绑定进入 Bindable 封装Instance 对象, 这里先不细说， 关注流程。</p>
+<p>接下来执行, 上面Application 设置 spring.main 参数注入， 可能影响env 对象类型， 比如 spring.main 指定 web 类型转换 reactive, 需要转换 env 进入 ReactiveEnviroment 类型。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!<span class="keyword">this</span>.isCustomEnvironment) &#123;</span><br><span class="line">  environment = <span class="keyword">new</span> EnvironmentConverter(getClassLoader()).convertEnvironmentIfNecessary(environment,</span><br><span class="line">      deduceEnvironmentClass());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>beanInfo加载判断, spring.beaninfo.ignore，lazy load 变得 代价较高</p>
+<p>到这里 Enviroment 加载已经完成了， 后面是 ApplicationContext 加载过程， 第二章介绍 ApplicationListener env 事件监听， 底层后面专题沟通。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    Donate
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="joker WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="joker Alipay">
+        <p>Alipay</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+              <a href="/tags/SpringBoot/" rel="tag"># SpringBoot</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/08/29/SpringApplicationStarter/" rel="prev" title="SpringApplication builder 启动">
+      <i class="fa fa-chevron-left"></i> SpringApplication builder 启动
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/09/01/SpringEnvConfig2/" rel="next" title="Spring Environment Config 2">
+      Spring Environment Config 2 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#propertySource-%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">propertySource 资源管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Environment-%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83%E4%B8%8A%E4%B8%8B%E6%96%87Context"><span class="nav-number">2.</span> <span class="nav-text">Environment 配置环境上下文Context</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ConfigurablePropertyResolver-ConfigurablePropertyResolver"><span class="nav-number">3.</span> <span class="nav-text">ConfigurablePropertyResolver ConfigurablePropertyResolver</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#configure-%E9%85%8D%E7%BD%AE-Env"><span class="nav-number">4.</span> <span class="nav-text">configure 配置 Env</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="joker"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">joker</p>
+  <div class="site-description" itemprop="description">why so serious</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/LiveAlone" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;LiveAlone" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:yaoqijunmail@foxmail.com" title="E-Mail → mailto:yaoqijunmail@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">joker</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

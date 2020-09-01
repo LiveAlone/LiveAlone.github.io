@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.0.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.yaoqijun.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="想说明一下 Spring Enviroment 加载不同来源的 配置文件。 Spring 内置事件分发器SpringApplicationRunnerListener 之前在 spring.factories 配置 EventPublishingRunListener, 负责事件发放 123# Run Listenersorg.springframework.boot.SpringApplicat">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Environment Config 2">
+<meta property="og:url" content="http://blog.yaoqijun.site/2020/09/01/SpringEnvConfig2/index.html">
+<meta property="og:site_name" content="joker">
+<meta property="og:description" content="想说明一下 Spring Enviroment 加载不同来源的 配置文件。 Spring 内置事件分发器SpringApplicationRunnerListener 之前在 spring.factories 配置 EventPublishingRunListener, 负责事件发放 123# Run Listenersorg.springframework.boot.SpringApplicat">
+<meta property="og:locale">
+<meta property="article:published_time" content="2020-08-31T17:38:10.000Z">
+<meta property="article:modified_time" content="2020-09-01T06:32:14.447Z">
+<meta property="article:author" content="joker">
+<meta property="article:tag" content="Spring">
+<meta property="article:tag" content="SpringBoot">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://blog.yaoqijun.site/2020/09/01/SpringEnvConfig2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>Spring Environment Config 2 | joker</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">joker</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">why so serious</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://blog.yaoqijun.site/2020/09/01/SpringEnvConfig2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="joker">
+      <meta itemprop="description" content="why so serious">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="joker">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring Environment Config 2
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2020-09-01 01:38:10 / Modified: 14:32:14" itemprop="dateCreated datePublished" datetime="2020-09-01T01:38:10+08:00">2020-09-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">技术</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/Spring/SpringBoot/" itemprop="url" rel="index"><span itemprop="name">SpringBoot</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>想说明一下 Spring Enviroment 加载不同来源的 配置文件。</p>
+<h5 id="Spring-内置事件分发器"><a href="#Spring-内置事件分发器" class="headerlink" title="Spring 内置事件分发器"></a>Spring 内置事件分发器</h5><p>SpringApplicationRunnerListener 之前在 spring.factories 配置 EventPublishingRunListener, 负责事件发放</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Run Listeners</span></span><br><span class="line"><span class="string">org.springframework.boot.SpringApplicationRunListener=\</span></span><br><span class="line"><span class="string">org.springframework.boot.context.event.EventPublishingRunListener</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">EventPublishingRunListener</span><span class="params">(SpringApplication application, String[] args)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.application = application;</span><br><span class="line">    <span class="keyword">this</span>.args = args;</span><br><span class="line">    <span class="keyword">this</span>.initialMulticaster = <span class="keyword">new</span> SimpleApplicationEventMulticaster();</span><br><span class="line">    <span class="keyword">for</span> (ApplicationListener&lt;?&gt; listener : application.getListeners()) &#123;</span><br><span class="line">        <span class="keyword">this</span>.initialMulticaster.addApplicationListener(listener);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过构造函数, 通过 application 获取ApplicationListener 事件监听对象。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@FunctionalInterface</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationListener</span>&lt;<span class="title">E</span> <span class="keyword">extends</span> <span class="title">ApplicationEvent</span>&gt; <span class="keyword">extends</span> <span class="title">EventListener</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">onApplicationEvent</span><span class="params">(E event)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationEvent</span> <span class="keyword">extends</span> <span class="title">EventObject</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">7099057708183571937L</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> timestamp;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ApplicationEvent</span><span class="params">(Object source)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(source);</span><br><span class="line">        <span class="keyword">this</span>.timestamp = System.currentTimeMillis();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">long</span> <span class="title">getTimestamp</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.timestamp;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到事件监听者， 通过继承ApplicationListener 实现对应的事件监听， 监听事件类型 ApplicaiotnEvent, spring 通过 spring.factory 获取所有的 Listeners, <strong>这个时候SpringFactory 还没有启动，Listener Bean 不会Env 初始化中进行</strong>， ApplicationListener 通过监听参数 Class 类型进行事件分发，很巧妙，参考 <code>org.springframework.context.event.SimpleApplicationEventMulticaster</code> 实现方式。</p>
+<p>下面我们看看 Env 初始化需要执行的 Listeners, event 类型 <code>ApplicationEnvironmentPreparedEvent</code>, listeners 包含</p>
+<ul>
+<li>ConfigFileApplicationListener</li>
+<li>AnsiOutputApplicationListener</li>
+<li>LoggingApplicationListener</li>
+<li>ClasspathLoggingApplicationListener</li>
+<li>BackgroundPreinitializer</li>
+<li>DelegatingApplicationListener</li>
+<li>LocalApplicationListener</li>
+<li>FileEncodingApplicationListener</li>
+</ul>
+<p>ConfigFileApplicationListener 注入监听数据</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">onApplicationEnvironmentPreparedEvent</span><span class="params">(ApplicationEnvironmentPreparedEvent event)</span> </span>&#123;</span><br><span class="line">    List&lt;EnvironmentPostProcessor&gt; postProcessors = loadPostProcessors();</span><br><span class="line">    postProcessors.add(<span class="keyword">this</span>);</span><br><span class="line">    AnnotationAwareOrderComparator.sort(postProcessors);</span><br><span class="line">    <span class="keyword">for</span> (EnvironmentPostProcessor postProcessor : postProcessors) &#123;</span><br><span class="line">        postProcessor.postProcessEnvironment(event.getEnvironment(), event.getSpringApplication());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function">List&lt;EnvironmentPostProcessor&gt; <span class="title">loadPostProcessors</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> SpringFactoriesLoader.loadFactories(EnvironmentPostProcessor.class, getClass().getClassLoader());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过SpringFactoryLoad 对应 EnvironmentPostProcessor 处理不同的文件加载load, load processor 包括:</p>
+<ul>
+<li>SystemEnvironmentPropertySourceEnvironmentPostProcessor</li>
+<li>SpringApplicationJsonEnvironmentPostProcessor</li>
+<li>CloudFoundryVcapEnvironmentPostProcessor</li>
+<li>ConfigFileApplicationListener</li>
+<li>DebugAgentEnvironmentPostProcessor</li>
+<li>SpringBootTestRandomPortEnvironmentPostProcessor</li>
+</ul>
+<p>ConfigFileApplicationListener 添加配置文件 PropertySource 配置资源文件，加载配置方式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">addPropertySources</span><span class="params">(ConfigurableEnvironment environment, ResourceLoader resourceLoader)</span> </span>&#123;</span><br><span class="line">    RandomValuePropertySource.addToEnvironment(environment);</span><br><span class="line">    <span class="keyword">new</span> Loader(environment, resourceLoader).load();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// loader 初始化</span></span><br><span class="line">Loader(ConfigurableEnvironment environment, ResourceLoader resourceLoader) &#123;</span><br><span class="line">    <span class="keyword">this</span>.environment = environment;</span><br><span class="line">    <span class="keyword">this</span>.placeholdersResolver = <span class="keyword">new</span> PropertySourcesPlaceholdersResolver(<span class="keyword">this</span>.environment);</span><br><span class="line">    <span class="keyword">this</span>.resourceLoader = (resourceLoader != <span class="keyword">null</span>) ? resourceLoader : <span class="keyword">new</span> DefaultResourceLoader(<span class="keyword">null</span>);</span><br><span class="line">    <span class="keyword">this</span>.propertySourceLoaders = SpringFactoriesLoader.loadFactories(PropertySourceLoader.class,</span><br><span class="line">            getClass().getClassLoader());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// spring.factories</span></span><br><span class="line"># PropertySource Loaders</span><br><span class="line">org.springframework.boot.env.PropertySourceLoader=\</span><br><span class="line">org.springframework.boot.env.PropertiesPropertySourceLoader,\</span><br><span class="line">org.springframework.boot.env.YamlPropertySourceLoader</span><br></pre></td></tr></table></figure>
+
+<p>上面loader 初始化，通过SpringFactory 获取 PropertySourceLoader 配置文件加载类目， 可以看到 properties xml， yaml yml, 配置文件加载。 <code>org.springframework.boot.context.config.ConfigFileApplicationListener.Loader</code> 加载配置文件，结合但是 profile， 相对复杂，专题沟通。 所以， 配置环境中扩展配置，可以 spring.factories 继承PropertySourceLoader 实现配置load, 或者自定义 Env Listener 插入对应 PropertySource 资源。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    Donate
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="joker WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="joker Alipay">
+        <p>Alipay</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Spring/" rel="tag"># Spring</a>
+              <a href="/tags/SpringBoot/" rel="tag"># SpringBoot</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/08/30/SpringEnvConfig1/" rel="prev" title="Spring Environment Config 1">
+      <i class="fa fa-chevron-left"></i> Spring Environment Config 1
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-5"><a class="nav-link" href="#Spring-%E5%86%85%E7%BD%AE%E4%BA%8B%E4%BB%B6%E5%88%86%E5%8F%91%E5%99%A8"><span class="nav-number">1.</span> <span class="nav-text">Spring 内置事件分发器</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="joker"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">joker</p>
+  <div class="site-description" itemprop="description">why so serious</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/LiveAlone" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;LiveAlone" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:yaoqijunmail@foxmail.com" title="E-Mail → mailto:yaoqijunmail@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">joker</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

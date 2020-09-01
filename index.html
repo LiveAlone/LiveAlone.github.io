@@ -164,6 +164,282 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://blog.yaoqijun.site/2020/09/01/SpringEnvConfig2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="joker">
+      <meta itemprop="description" content="why so serious">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="joker">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/09/01/SpringEnvConfig2/" class="post-title-link" itemprop="url">Spring Environment Config 2</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2020-09-01 01:38:10 / Modified: 14:32:14" itemprop="dateCreated datePublished" datetime="2020-09-01T01:38:10+08:00">2020-09-01</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">技术</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/Spring/SpringBoot/" itemprop="url" rel="index"><span itemprop="name">SpringBoot</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>想说明一下 Spring Enviroment 加载不同来源的 配置文件。</p>
+<h5 id="Spring-内置事件分发器"><a href="#Spring-内置事件分发器" class="headerlink" title="Spring 内置事件分发器"></a>Spring 内置事件分发器</h5><p>SpringApplicationRunnerListener 之前在 spring.factories 配置 EventPublishingRunListener, 负责事件发放</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Run Listeners</span></span><br><span class="line"><span class="string">org.springframework.boot.SpringApplicationRunListener=\</span></span><br><span class="line"><span class="string">org.springframework.boot.context.event.EventPublishingRunListener</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">EventPublishingRunListener</span><span class="params">(SpringApplication application, String[] args)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.application = application;</span><br><span class="line">    <span class="keyword">this</span>.args = args;</span><br><span class="line">    <span class="keyword">this</span>.initialMulticaster = <span class="keyword">new</span> SimpleApplicationEventMulticaster();</span><br><span class="line">    <span class="keyword">for</span> (ApplicationListener&lt;?&gt; listener : application.getListeners()) &#123;</span><br><span class="line">        <span class="keyword">this</span>.initialMulticaster.addApplicationListener(listener);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过构造函数, 通过 application 获取ApplicationListener 事件监听对象。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@FunctionalInterface</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">ApplicationListener</span>&lt;<span class="title">E</span> <span class="keyword">extends</span> <span class="title">ApplicationEvent</span>&gt; <span class="keyword">extends</span> <span class="title">EventListener</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">onApplicationEvent</span><span class="params">(E event)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">ApplicationEvent</span> <span class="keyword">extends</span> <span class="title">EventObject</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">7099057708183571937L</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> timestamp;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ApplicationEvent</span><span class="params">(Object source)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(source);</span><br><span class="line">        <span class="keyword">this</span>.timestamp = System.currentTimeMillis();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">long</span> <span class="title">getTimestamp</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>.timestamp;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到事件监听者， 通过继承ApplicationListener 实现对应的事件监听， 监听事件类型 ApplicaiotnEvent, spring 通过 spring.factory 获取所有的 Listeners, <strong>这个时候SpringFactory 还没有启动，Listener Bean 不会Env 初始化中进行</strong>， ApplicationListener 通过监听参数 Class 类型进行事件分发，很巧妙，参考 <code>org.springframework.context.event.SimpleApplicationEventMulticaster</code> 实现方式。</p>
+<p>下面我们看看 Env 初始化需要执行的 Listeners, event 类型 <code>ApplicationEnvironmentPreparedEvent</code>, listeners 包含</p>
+<ul>
+<li>ConfigFileApplicationListener</li>
+<li>AnsiOutputApplicationListener</li>
+<li>LoggingApplicationListener</li>
+<li>ClasspathLoggingApplicationListener</li>
+<li>BackgroundPreinitializer</li>
+<li>DelegatingApplicationListener</li>
+<li>LocalApplicationListener</li>
+<li>FileEncodingApplicationListener</li>
+</ul>
+<p>ConfigFileApplicationListener 注入监听数据</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">onApplicationEnvironmentPreparedEvent</span><span class="params">(ApplicationEnvironmentPreparedEvent event)</span> </span>&#123;</span><br><span class="line">    List&lt;EnvironmentPostProcessor&gt; postProcessors = loadPostProcessors();</span><br><span class="line">    postProcessors.add(<span class="keyword">this</span>);</span><br><span class="line">    AnnotationAwareOrderComparator.sort(postProcessors);</span><br><span class="line">    <span class="keyword">for</span> (EnvironmentPostProcessor postProcessor : postProcessors) &#123;</span><br><span class="line">        postProcessor.postProcessEnvironment(event.getEnvironment(), event.getSpringApplication());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function">List&lt;EnvironmentPostProcessor&gt; <span class="title">loadPostProcessors</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> SpringFactoriesLoader.loadFactories(EnvironmentPostProcessor.class, getClass().getClassLoader());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过SpringFactoryLoad 对应 EnvironmentPostProcessor 处理不同的文件加载load, load processor 包括:</p>
+<ul>
+<li>SystemEnvironmentPropertySourceEnvironmentPostProcessor</li>
+<li>SpringApplicationJsonEnvironmentPostProcessor</li>
+<li>CloudFoundryVcapEnvironmentPostProcessor</li>
+<li>ConfigFileApplicationListener</li>
+<li>DebugAgentEnvironmentPostProcessor</li>
+<li>SpringBootTestRandomPortEnvironmentPostProcessor</li>
+</ul>
+<p>ConfigFileApplicationListener 添加配置文件 PropertySource 配置资源文件，加载配置方式</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">addPropertySources</span><span class="params">(ConfigurableEnvironment environment, ResourceLoader resourceLoader)</span> </span>&#123;</span><br><span class="line">    RandomValuePropertySource.addToEnvironment(environment);</span><br><span class="line">    <span class="keyword">new</span> Loader(environment, resourceLoader).load();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// loader 初始化</span></span><br><span class="line">Loader(ConfigurableEnvironment environment, ResourceLoader resourceLoader) &#123;</span><br><span class="line">    <span class="keyword">this</span>.environment = environment;</span><br><span class="line">    <span class="keyword">this</span>.placeholdersResolver = <span class="keyword">new</span> PropertySourcesPlaceholdersResolver(<span class="keyword">this</span>.environment);</span><br><span class="line">    <span class="keyword">this</span>.resourceLoader = (resourceLoader != <span class="keyword">null</span>) ? resourceLoader : <span class="keyword">new</span> DefaultResourceLoader(<span class="keyword">null</span>);</span><br><span class="line">    <span class="keyword">this</span>.propertySourceLoaders = SpringFactoriesLoader.loadFactories(PropertySourceLoader.class,</span><br><span class="line">            getClass().getClassLoader());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// spring.factories</span></span><br><span class="line"># PropertySource Loaders</span><br><span class="line">org.springframework.boot.env.PropertySourceLoader=\</span><br><span class="line">org.springframework.boot.env.PropertiesPropertySourceLoader,\</span><br><span class="line">org.springframework.boot.env.YamlPropertySourceLoader</span><br></pre></td></tr></table></figure>
+
+<p>上面loader 初始化，通过SpringFactory 获取 PropertySourceLoader 配置文件加载类目， 可以看到 properties xml， yaml yml, 配置文件加载。 <code>org.springframework.boot.context.config.ConfigFileApplicationListener.Loader</code> 加载配置文件，结合但是 profile， 相对复杂，专题沟通。 所以， 配置环境中扩展配置，可以 spring.factories 继承PropertySourceLoader 实现配置load, 或者自定义 Env Listener 插入对应 PropertySource 资源。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://blog.yaoqijun.site/2020/08/30/SpringEnvConfig1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="joker">
+      <meta itemprop="description" content="why so serious">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="joker">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2020/08/30/SpringEnvConfig1/" class="post-title-link" itemprop="url">Spring Environment Config 1</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-08-30 22:16:00" itemprop="dateCreated datePublished" datetime="2020-08-30T22:16:00+08:00">2020-08-30</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-09-01 01:33:36" itemprop="dateModified" datetime="2020-09-01T01:33:36+08:00">2020-09-01</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">技术</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/Spring/" itemprop="url" rel="index"><span itemprop="name">Spring</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/Spring/SpringBoot/" itemprop="url" rel="index"><span itemprop="name">SpringBoot</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>上一篇大概了解了 SpringApplication.Run() 运行初始化过程， 这次了解 EnviromentConfig 配置初始化。</p>
+<h4 id="propertySource-资源管理"><a href="#propertySource-资源管理" class="headerlink" title="propertySource 资源管理"></a>propertySource 资源管理</h4><p>application 初始化时候， 创建DefaultApplicationArguments args 启动参数分装， 内部会对 args 分装PropertySource。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">PropertySource</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> String name; <span class="comment">// source 配置资源的名称</span></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">final</span> T source;   <span class="comment">// 资源配置类型, properties map 等等, MustableProperty 管理 name - sourceProperty 映射关系。</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面展示PropertySource 集成关系图片, 我们解析不同继承链实现方式。<br><img src="/images/20200831/PropertySource.png" alt="SourceProperty"></p>
+<ul>
+<li>StubPropertySource source 为null 站位资源类型<ul>
+<li>ComparisonPropertySource 为了集合比较 Source 资源类型</li>
+</ul>
+</li>
+<li>FilteredPropertySource PropertSource 封装， 包含一个 FilsterSet, 过滤PropertySource 中部分属性不可见</li>
+<li>ConfigurationPropertySourcesPropertySource 对 ConfigurationPropertySourcesPropertySource list 封装， 通过这个集成多souce 来源</li>
+<li>EnumerablePropertySource 我们知道 source 资源 T 抽象类型， Enum 定义 sourceName 可枚举比较<ul>
+<li>CompositePropertySource 多source来源组合封装方式</li>
+<li>DynamicValuesPropertySource source 抽象类型 <code>Map&lt;String, Supplier&lt;Object&gt;&gt;</code> 通过Supplier customer 自定提供对象逻辑</li>
+<li>CommandLinePropertySource，SimpleCommandLinePropertySource 这里 命令行参数 a=b,b=c 装换Source 格式化数据结构</li>
+<li>MapPropertySource source 定义类型 <code>Map&lt;String, Object&gt;</code><ul>
+<li>SystemEnvironmentPropertySource 系统配置Property 做一些参数名格式转换</li>
+<li>PropertiesPropertySource， JsonPropertySource， spring source 格式管理， 后面详细说明。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="Environment-配置环境上下文Context"><a href="#Environment-配置环境上下文Context" class="headerlink" title="Environment 配置环境上下文Context"></a>Environment 配置环境上下文Context</h4><p>Spring通过 Enviroment 管理启动环境上下文配置信息，profile 激活环境配置，不同Source Config yaml 配置来源。<br>Environment 继承关系关系图片 <img src="/images/20200831/PropertyResolver.png" alt="PropertyResolver"></p>
+<p>相关接口实现方式</p>
+<ul>
+<li>PropertyResolver 底层通过 PropertySource 支持 Property 属性获取<ul>
+<li>Environment 不同 profiles，理解激活环境，不同配置。@Profile 注解提供支持环境<ul>
+<li>ConfigurableEnvironment 支持配置换环境注入， profile 动态激活，MutablePropertySources 底层依赖，支持 merge(env) 多ConfigurableEnvironment 组合<ul>
+<li>ConfigurableReactiveWebEnvironment web 环境env</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>ConfigurablePropertyResolver ConversionService 用户定制化 source 对象转换</li>
+</ul>
+</li>
+</ul>
+<p>实现类型</p>
+<ul>
+<li>AbstractEnvironment 抽象env 实现对象<ul>
+<li>StandardEnvironment MutablePropertySource 多资源属性配置</li>
+<li>StandardReactiveWebEnvironment web reactive</li>
+</ul>
+</li>
+</ul>
+<p>笔记环境创建StandardEnvironment对象, SpringApplication 初始化创建 Env 过程</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> ConfigurableEnvironment <span class="title">prepareEnvironment</span><span class="params">(SpringApplicationRunListeners listeners,</span></span></span><br><span class="line"><span class="function"><span class="params">    ApplicationArguments applicationArguments)</span> </span>&#123;</span><br><span class="line">  <span class="comment">// Create and configure the environment</span></span><br><span class="line">  ConfigurableEnvironment environment = getOrCreateEnvironment(); <span class="comment">// 当前App 类型， 创建对应的Env</span></span><br><span class="line">  configureEnvironment(environment, applicationArguments.getSourceArgs()); <span class="comment">// SpringApplication 添加添加环境启动一些 Env 配置信息</span></span><br><span class="line">  ConfigurationPropertySources.attach(environment);   <span class="comment">// 移除 attach properties 后面说</span></span><br><span class="line">  listeners.environmentPrepared(environment);   <span class="comment">// 通过 applicationListener env 加载对应的EnvProcessor</span></span><br><span class="line">  bindToSpringApplication(environment); <span class="comment">// 额外绑定操作等等</span></span><br><span class="line">  <span class="keyword">if</span> (!<span class="keyword">this</span>.isCustomEnvironment) &#123;</span><br><span class="line">    environment = <span class="keyword">new</span> EnvironmentConverter(getClassLoader()).convertEnvironmentIfNecessary(environment,</span><br><span class="line">        deduceEnvironmentClass());</span><br><span class="line">  &#125;</span><br><span class="line">  ConfigurationPropertySources.attach(environment);</span><br><span class="line">  <span class="keyword">return</span> environment;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>PropertySourcesPropertyResolver env 依赖底层配置Prperty Resolver 处理工具。 追踪 getProperty 处理方式。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="keyword">protected</span> &lt;T&gt; <span class="function">T <span class="title">getProperty</span><span class="params">(String key, Class&lt;T&gt; targetValueType, <span class="keyword">boolean</span> resolveNestedPlaceholders)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.propertySources != <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (PropertySource&lt;?&gt; propertySource : <span class="keyword">this</span>.propertySources) &#123; <span class="comment">// 遍历所有的PropertySouce 资源列表内容，之前说过</span></span><br><span class="line">      <span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">        logger.trace(<span class="string">&quot;Searching for key &#x27;&quot;</span> + key + <span class="string">&quot;&#x27; in PropertySource &#x27;&quot;</span> +</span><br><span class="line">            propertySource.getName() + <span class="string">&quot;&#x27;&quot;</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      Object value = propertySource.getProperty(key); <span class="comment">// 查找包含了 key 的 PropertySource value</span></span><br><span class="line">      <span class="keyword">if</span> (value != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (resolveNestedPlaceholders &amp;&amp; value <span class="keyword">instanceof</span> String) &#123;</span><br><span class="line">          value = resolveNestedPlaceholders((String) value);</span><br><span class="line">        &#125;</span><br><span class="line">        logKeyFound(key, propertySource, value);</span><br><span class="line">        <span class="keyword">return</span> convertValueIfNecessary(value, targetValueType); <span class="comment">// ConversionService objectValue 进行数据转换</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (logger.isTraceEnabled()) &#123;</span><br><span class="line">    logger.trace(<span class="string">&quot;Could not find key &#x27;&quot;</span> + key + <span class="string">&quot;&#x27; in any property source&quot;</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="ConfigurablePropertyResolver-ConfigurablePropertyResolver"><a href="#ConfigurablePropertyResolver-ConfigurablePropertyResolver" class="headerlink" title="ConfigurablePropertyResolver ConfigurablePropertyResolver"></a>ConfigurablePropertyResolver ConfigurablePropertyResolver</h4><p>ConfigurablePropertyResolver 提供用户定制化的Property 属性对象转换方式， 通过 ConversionService定制化<br><img src="/images/20200831/ConversionService.png" alt="ConversionService"></p>
+<ul>
+<li>ConversionService 类型转换服务，sourceClassType to targetClassType，通过convert TargetType 类型转换<ul>
+<li>CompositeConversionService 多ConversionService 组合转换方式</li>
+<li>ConfigurableConversionService interface 继承 支持 Converter 类型转换配置 config</li>
+<li>GenericConversionService 定义通用转换类型，分装不同的Converter 转换器<ul>
+<li>FormattingConversionService 格式化Format 类型转换方式</li>
+<li>TypeConverterConversionService type 类型转换</li>
+<li>DefaultConversionService 默认注册不同 Conversion</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>GenericConverter 通用Converter 单一类型转换方式， 通过ConvertiblePair 提供转换类型信息。</p>
+<h4 id="configure-配置-Env"><a href="#configure-配置-Env" class="headerlink" title="configure 配置 Env"></a>configure 配置 Env</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">configureEnvironment</span><span class="params">(ConfigurableEnvironment environment, String[] args)</span> </span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">this</span>.addConversionService) &#123;</span><br><span class="line">    ConversionService conversionService = ApplicationConversionService.getSharedInstance();</span><br><span class="line">    environment.setConversionService((ConfigurableConversionService) conversionService);  <span class="comment">// env 注册 ConversionService</span></span><br><span class="line">  &#125;</span><br><span class="line">  configurePropertySources(environment, args);</span><br><span class="line">  configureProfiles(environment, args);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>ApplicationConversionService 注册配置String Number 不同类型转换器执行。 StanderEnv 添加类型转换器。</li>
+<li>args 作为一种 PropertySource, 添加进入 Env 数据源中，我们知道 args 是优先级最高， source.addFirst</li>
+<li>添加env 环境的 Profile 上下文，支持激活上下文配置方式。</li>
+</ol>
+<figure class="highlight plain"><figcaption><span>configurationProperties 添加 PropertySource, 事件注入, 后面Listener 通过监听事件注入 (这个下一篇再讲)</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">#### bindingToSpringApplication binder 绑定SpringApplication 属性变量</span><br><span class="line"></span><br><span class="line">&#96;&#96;&#96;java</span><br><span class="line">protected void bindToSpringApplication(ConfigurableEnvironment environment) &#123;</span><br><span class="line">  try &#123;</span><br><span class="line">    Binder.get(environment).bind(&quot;spring.main&quot;, Bindable.ofInstance(this));  &#x2F;&#x2F; spring.main 配置内容 绑定我们 SpringApplication 中</span><br><span class="line">  &#125;</span><br><span class="line">  catch (Exception ex) &#123;</span><br><span class="line">    throw new IllegalStateException(&quot;Cannot bind to SpringApplication&quot;, ex);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Binder 对象属性绑定这， prefix “spaing.main” 配置绑定进入 Bindable 封装Instance 对象, 这里先不细说， 关注流程。</p>
+<p>接下来执行, 上面Application 设置 spring.main 参数注入， 可能影响env 对象类型， 比如 spring.main 指定 web 类型转换 reactive, 需要转换 env 进入 ReactiveEnviroment 类型。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!<span class="keyword">this</span>.isCustomEnvironment) &#123;</span><br><span class="line">  environment = <span class="keyword">new</span> EnvironmentConverter(getClassLoader()).convertEnvironmentIfNecessary(environment,</span><br><span class="line">      deduceEnvironmentClass());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>beanInfo加载判断, spring.beaninfo.ignore，lazy load 变得 代价较高</p>
+<p>到这里 Enviroment 加载已经完成了， 后面是 ApplicationContext 加载过程， 第二章介绍 ApplicationListener env 事件监听， 底层后面专题沟通。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
     <link itemprop="mainEntityOfPage" href="http://blog.yaoqijun.site/2020/08/29/SpringApplicationStarter/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -636,7 +912,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">6</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
