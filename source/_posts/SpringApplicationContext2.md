@@ -1,6 +1,5 @@
 ---
 title: SpringApplicationContext2
-date: 2020-09-02 00:40:26
 tags:
   - Spring
   - SpringBoot
@@ -8,7 +7,9 @@ categories:
   - 技术
   - Spring
   - SpringBoot
+date: 2020-09-02 00:40:26
 ---
+
 
 SpringContext Refresh 刷新所有的启动配置, AbstractApplicationContext 刷新所有的配置列表内容。
 
@@ -145,4 +146,94 @@ invoker 执行BeanFactoryPostProcesser, static 方法，初始化loader 相关Be
 - ConfigurationWarningsApplicationContextInitializer$ConfigurationWarningsPostProcessor
 - ConfigFileApplicationListener$PropertySourceOrderingPostProcessor
 
-TODO org.springframework.context.support.PostProcessorRegistrationDelegate#invokeBeanFactoryPostProcessors(org.springframework.beans.factory.config.ConfigurableListableBeanFactory, java.util.List<org.springframework.beans.factory.config.BeanFactoryPostProcessor>)
+```java
+if (beanFactory instanceof BeanDefinitionRegistry) {
+    BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;
+    List<BeanFactoryPostProcessor> regularPostProcessors = new ArrayList<>();
+    List<BeanDefinitionRegistryPostProcessor> registryProcessors = new ArrayList<>();
+
+    // 预先注册 区分出了 BeanFactoryProcessor 和 BeanDefinitionProcessor, definition 预先执行
+    for (BeanFactoryPostProcessor postProcessor : beanFactoryPostProcessors) {
+        if (postProcessor instanceof BeanDefinitionRegistryPostProcessor) {
+            BeanDefinitionRegistryPostProcessor registryProcessor =
+                    (BeanDefinitionRegistryPostProcessor) postProcessor;
+            registryProcessor.postProcessBeanDefinitionRegistry(registry);
+            registryProcessors.add(registryProcessor);
+        }
+        else {
+            regularPostProcessors.add(postProcessor);
+        }
+    }
+
+    // bean factory 获取 BeanDefinitionRegistryPostProcessor, 这个时候获取Class 循环解析结果
+    List<BeanDefinitionRegistryPostProcessor> currentRegistryProcessors = new ArrayList<>();
+    String[] postProcessorNames =
+            beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
+    for (String ppName : postProcessorNames) {
+        if (beanFactory.isTypeMatch(ppName, PriorityOrdered.class)) {
+            currentRegistryProcessors.add(beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
+            processedBeans.add(ppName);
+        }
+    }
+    sortPostProcessors(currentRegistryProcessors, beanFactory);
+    registryProcessors.addAll(currentRegistryProcessors);
+    invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
+    currentRegistryProcessors.clear();
+
+    // 重新获取BeanDefinition 解析 Bean, 
+    postProcessorNames = beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
+    for (String ppName : postProcessorNames) {
+        if (!processedBeans.contains(ppName) && beanFactory.isTypeMatch(ppName, Ordered.class)) {
+            currentRegistryProcessors.add(beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
+            processedBeans.add(ppName);
+        }
+    }
+    sortPostProcessors(currentRegistryProcessors, beanFactory);
+    registryProcessors.addAll(currentRegistryProcessors);
+    invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
+    currentRegistryProcessors.clear();
+
+    // 最后循环执行, 直到没有新的BeanDefinitionRegistryPostProcessor 产生以后结束
+    boolean reiterate = true;
+    while (reiterate) {
+        reiterate = false;
+        postProcessorNames = beanFactory.getBeanNamesForType(BeanDefinitionRegistryPostProcessor.class, true, false);
+        for (String ppName : postProcessorNames) {
+            if (!processedBeans.contains(ppName)) {
+                currentRegistryProcessors.add(beanFactory.getBean(ppName, BeanDefinitionRegistryPostProcessor.class));
+                processedBeans.add(ppName);
+                reiterate = true;
+            }
+        }
+        sortPostProcessors(currentRegistryProcessors, beanFactory);
+        registryProcessors.addAll(currentRegistryProcessors);
+        invokeBeanDefinitionRegistryPostProcessors(currentRegistryProcessors, registry);
+        currentRegistryProcessors.clear();
+    }
+
+    // 最后执行 BeanFactoryProcessor, 包含对BeanDefinition 增强， 添加BeanPostProcessor
+    invokeBeanFactoryPostProcessors(registryProcessors, beanFactory);
+    invokeBeanFactoryPostProcessors(regularPostProcessors, beanFactory);
+}
+
+else {
+    // Invoke factory processors registered with the context instance.
+    invokeBeanFactoryPostProcessors(beanFactoryPostProcessors, beanFactory);
+}
+```
+
+后面会重新获取 BeanFactoryPostProcessor，刚刚BeanDefinition, BeanFactoryProcessor 可能影响了 BeanFactory 中 BeanFactoryProcessor 数据集合。
+最后执行 priorityOrderedPostProcessors, orderedBeanFactoryPostProcessor,nonOrderedPostProcessors 顺序执行列表。
+上面BeanFactoryProcessor 执行完成了， 初始化一些BeanDefinition 内容。
+
+#### registerBeanPostProcessors 注册BeanPostProcessor
+
+区分三种类型 priorityOrderedPostProcessors，internalPostProcessors，orderedPostProcessorNames，nonOrderedPostProcessorNames。
+这些Processor 执行顺序, priorityOrderedPostProcessors > orderedPostProcessors > nonOrderedPostProcessors > internalPostProcessors
+internalPostProcessors 对于类型是 MergedBeanDefinitionPostProcessor，包含前三个集合数据， bean 实例化以后， 对齐合并定义， 对BeanPostProcessor 的扩充。
+
+initMessageSource 初始化 MessageSource bean, initApplicationEventMulticaster 注册消息分发对象。
+
+这个时候 BeanFactory 初始化基本已经完成了， BeanDefinition 资源已经加载完毕了， 但是 并没有初始化 创建Bean。所以，下面 OnRefresh() 不同的 App 实现不同的扩展模块， web 实现 tomcat 服务启动 等等。 registerListeners() 完成不同 ApplicationListener bean 注册factory 中。 ```finishBeanFactoryInitialization(beanFactory);``` 立即初始化所有的单例Bean。 FinishRefresh() 事件分发，初始化一下 lifecycleBean。 最后清理所有 Cache 解析缓存。
+```beanFactory.preInstantiateSingletons``` init singletion bean，依赖BeanDefinition 执行init 方法, SmartInitializingSingleton 等等。 DETAIL TODO
+
