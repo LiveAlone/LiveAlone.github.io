@@ -235,5 +235,4 @@ internalPostProcessors 对于类型是 MergedBeanDefinitionPostProcessor，包�
 initMessageSource 初始化 MessageSource bean, initApplicationEventMulticaster 注册消息分发对象。
 
 这个时候 BeanFactory 初始化基本已经完成了， BeanDefinition 资源已经加载完毕了， 但是 并没有初始化 创建Bean。所以，下面 OnRefresh() 不同的 App 实现不同的扩展模块， web 实现 tomcat 服务启动 等等。 registerListeners() 完成不同 ApplicationListener bean 注册factory 中。 ```finishBeanFactoryInitialization(beanFactory);``` 立即初始化所有的单例Bean。 FinishRefresh() 事件分发，初始化一下 lifecycleBean。 最后清理所有 Cache 解析缓存。
-```beanFactory.preInstantiateSingletons``` init singletion bean，依赖BeanDefinition 执行init 方法, SmartInitializingSingleton 等等。 DETAIL TODO
-
+```beanFactory.preInstantiateSingletons``` init singletion bean，依赖BeanDefinition 执行init 方法, SmartInitializingSingleton 等等。
