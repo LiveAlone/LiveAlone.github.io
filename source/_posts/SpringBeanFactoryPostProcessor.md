@@ -1,6 +1,5 @@
 ---
-title: bean factory processor 
-date: 2020-09-03 20:56:43
+title: bean factory processor
 tags:
   - Spring
   - SpringBoot
@@ -8,7 +7,9 @@ categories:
   - 技术
   - Spring
   - SpringBoot
+date: 2020-09-03 20:56:43
 ---
+
 
 SpringBeanFactoryProcessor 初始化BeanFactory, 读取不同的Source 来源的配置文件， 解析 AnnotationClass 注入 BeanDefinition。
 通过 ```org.springframework.context.support.PostProcessorRegistrationDelegate#invokeBeanFactoryPostProcessors()``` 方法，执行BeanFactoryProcessor。
