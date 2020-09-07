@@ -28,7 +28,7 @@
 <meta property="og:description" content="SpringContext Refresh 刷新所有的启动配置, AbstractApplicationContext 刷新所有的配置列表内容。 123456789101112131415161718192021222324252627282930313233public void refresh() throws BeansException, IllegalStateException &amp;#1">
 <meta property="og:locale">
 <meta property="article:published_time" content="2020-09-01T16:40:26.000Z">
-<meta property="article:modified_time" content="2020-09-03T09:19:58.048Z">
+<meta property="article:modified_time" content="2020-09-06T17:11:40.307Z">
 <meta property="article:author" content="joker">
 <meta property="article:tag" content="Spring">
 <meta property="article:tag" content="SpringBoot">
@@ -198,7 +198,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-09-03 17:19:58" itemprop="dateModified" datetime="2020-09-03T17:19:58+08:00">2020-09-03</time>
+                <time title="Modified: 2020-09-07 01:11:40" itemprop="dateModified" datetime="2020-09-07T01:11:40+08:00">2020-09-07</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -250,7 +250,7 @@
 <p>后面会重新获取 BeanFactoryPostProcessor，刚刚BeanDefinition, BeanFactoryProcessor 可能影响了 BeanFactory 中 BeanFactoryProcessor 数据集合。<br>最后执行 priorityOrderedPostProcessors, orderedBeanFactoryPostProcessor,nonOrderedPostProcessors 顺序执行列表。<br>上面BeanFactoryProcessor 执行完成了， 初始化一些BeanDefinition 内容。</p>
 <h4 id="registerBeanPostProcessors-注册BeanPostProcessor"><a href="#registerBeanPostProcessors-注册BeanPostProcessor" class="headerlink" title="registerBeanPostProcessors 注册BeanPostProcessor"></a>registerBeanPostProcessors 注册BeanPostProcessor</h4><p>区分三种类型 priorityOrderedPostProcessors，internalPostProcessors，orderedPostProcessorNames，nonOrderedPostProcessorNames。<br>这些Processor 执行顺序, priorityOrderedPostProcessors &gt; orderedPostProcessors &gt; nonOrderedPostProcessors &gt; internalPostProcessors<br>internalPostProcessors 对于类型是 MergedBeanDefinitionPostProcessor，包含前三个集合数据， bean 实例化以后， 对齐合并定义， 对BeanPostProcessor 的扩充。</p>
 <p>initMessageSource 初始化 MessageSource bean, initApplicationEventMulticaster 注册消息分发对象。</p>
-<p>这个时候 BeanFactory 初始化基本已经完成了， BeanDefinition 资源已经加载完毕了， 但是 并没有初始化 创建Bean。所以，下面 OnRefresh() 不同的 App 实现不同的扩展模块， web 实现 tomcat 服务启动 等等。 registerListeners() 完成不同 ApplicationListener bean 注册factory 中。 <code>finishBeanFactoryInitialization(beanFactory);</code> 立即初始化所有的单例Bean。 FinishRefresh() 事件分发，初始化一下 lifecycleBean。 最后清理所有 Cache 解析缓存。<br><code>beanFactory.preInstantiateSingletons</code> init singletion bean，依赖BeanDefinition 执行init 方法, SmartInitializingSingleton 等等。 DETAIL TODO</p>
+<p>这个时候 BeanFactory 初始化基本已经完成了， BeanDefinition 资源已经加载完毕了， 但是 并没有初始化 创建Bean。所以，下面 OnRefresh() 不同的 App 实现不同的扩展模块， web 实现 tomcat 服务启动 等等。 registerListeners() 完成不同 ApplicationListener bean 注册factory 中。 <code>finishBeanFactoryInitialization(beanFactory);</code> 立即初始化所有的单例Bean。 FinishRefresh() 事件分发，初始化一下 lifecycleBean。 最后清理所有 Cache 解析缓存。<br><code>beanFactory.preInstantiateSingletons</code> init singletion bean，依赖BeanDefinition 执行init 方法, SmartInitializingSingleton 等等。</p>
 
     </div>
 
@@ -293,7 +293,10 @@
     <a href="/2020/09/01/SpringApplicationContext1/" rel="prev" title="SpringApplicationContext1">
       <i class="fa fa-chevron-left"></i> SpringApplicationContext1
     </a></div>
-      <div class="post-nav-item"></div>
+      <div class="post-nav-item">
+    <a href="/2020/09/03/SpringBeanFactoryPostProcessor/" rel="next" title="bean factory processor">
+      bean factory processor <i class="fa fa-chevron-right"></i>
+    </a></div>
     </div>
       </footer>
     
@@ -368,20 +371,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>

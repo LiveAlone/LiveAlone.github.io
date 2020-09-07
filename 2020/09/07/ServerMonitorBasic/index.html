@@ -20,18 +20,21 @@
     var CONFIG = {"hostname":"blog.yaoqijun.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="why so serious">
-<meta property="og:type" content="website">
-<meta property="og:title" content="joker">
-<meta property="og:url" content="http://blog.yaoqijun.site/archives/2020/09/index.html">
+  <meta name="description" content="微服务环境下服务之间的依赖变弱，会有防止雪崩，熔断降级策略。同时业务发布回滚策略处理方式。 服务一般部署在虚拟机，容器中，serverless 函数式部署等等。服务经常遇到问题，超时，异常，不可用，阻塞等等。 大概分为业务异常， 业务异常引起的资源服务异常，底层资源服务本身有问题。 监控服务时间状态， 遇到问题，通过登录虚拟机，容器中， 查看虚拟容器的实时参数，判断问题来源, 这样一般可以定位表面">
+<meta property="og:type" content="article">
+<meta property="og:title" content="微服务监控排查">
+<meta property="og:url" content="http://blog.yaoqijun.site/2020/09/07/ServerMonitorBasic/index.html">
 <meta property="og:site_name" content="joker">
-<meta property="og:description" content="why so serious">
+<meta property="og:description" content="微服务环境下服务之间的依赖变弱，会有防止雪崩，熔断降级策略。同时业务发布回滚策略处理方式。 服务一般部署在虚拟机，容器中，serverless 函数式部署等等。服务经常遇到问题，超时，异常，不可用，阻塞等等。 大概分为业务异常， 业务异常引起的资源服务异常，底层资源服务本身有问题。 监控服务时间状态， 遇到问题，通过登录虚拟机，容器中， 查看虚拟容器的实时参数，判断问题来源, 这样一般可以定位表面">
 <meta property="og:locale">
+<meta property="article:published_time" content="2020-09-07T07:55:09.000Z">
+<meta property="article:modified_time" content="2020-09-07T09:17:19.250Z">
 <meta property="article:author" content="joker">
-<meta property="article:tag" content="java">
+<meta property="article:tag" content="Monitor">
+<meta property="article:tag" content="Basic">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://blog.yaoqijun.site/archives/2020/09/">
+<link rel="canonical" href="http://blog.yaoqijun.site/2020/09/07/ServerMonitorBasic/">
 
 
 <script id="page-configurations">
@@ -39,12 +42,12 @@
   CONFIG.page = {
     sidebar: "",
     isHome : false,
-    isPost : false,
+    isPost : true,
     lang   : 'zh-Hans'
   };
 </script>
 
-  <title>Archive | joker</title>
+  <title>微服务监控排查 | joker</title>
   
 
 
@@ -158,130 +161,140 @@
         <div class="content-wrap">
           
 
-          <div class="content archive">
+          <div class="content post posts-expand">
             
 
+    
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        <span class="collection-header">Um..! 10 posts in total. Keep on posting.</span>
-      </div>
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://blog.yaoqijun.site/2020/09/07/ServerMonitorBasic/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="joker">
+      <meta itemprop="description" content="why so serious">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="joker">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          微服务监控排查
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2020-09-07 15:55:09 / Modified: 17:17:19" itemprop="dateCreated datePublished" datetime="2020-09-07T15:55:09+08:00">2020-09-07</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">技术</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/%E7%9B%91%E6%8E%A7/" itemprop="url" rel="index"><span itemprop="name">监控</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <span class="collection-header">2020</span>
-    </div>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-07T15:55:09+08:00"
-              content="2020-09-07">
-          09-07
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/07/ServerMonitorBasic/" itemprop="url">
-            <span itemprop="name">微服务监控排查</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-03T20:56:43+08:00"
-              content="2020-09-03">
-          09-03
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/03/SpringBeanFactoryPostProcessor/" itemprop="url">
-            <span itemprop="name">bean factory processor</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-02T00:40:26+08:00"
-              content="2020-09-02">
-          09-02
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/02/SpringApplicationContext2/" itemprop="url">
-            <span itemprop="name">SpringApplicationContext2</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-01T15:04:17+08:00"
-              content="2020-09-01">
-          09-01
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/01/SpringApplicationContext1/" itemprop="url">
-            <span itemprop="name">SpringApplicationContext1</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-09-01T01:38:10+08:00"
-              content="2020-09-01">
-          09-01
-        </time>
-      </div>
-
-      <div class="post-title">
-          <a class="post-title-link" href="/2020/09/01/SpringEnvConfig2/" itemprop="url">
-            <span itemprop="name">Spring Environment Config 2</span>
-          </a>
-      </div>
-
-    </header>
-  </article>
-
+        <p>微服务环境下服务之间的依赖变弱，会有防止雪崩，熔断降级策略。同时业务发布回滚策略处理方式。 服务一般部署在虚拟机，容器中，serverless 函数式部署等等。服务经常遇到问题，超时，异常，不可用，阻塞等等。 大概分为业务异常， 业务异常引起的资源服务异常，底层资源服务本身有问题。 监控服务时间状态， 遇到问题，通过登录虚拟机，容器中， 查看虚拟容器的实时参数，判断问题来源, 这样一般可以定位表面原因, 临时处理，但是对于定位问题来源，影响时间困难。历史状态监控工具, 定位异常发生时间，定位问题来源，分析异常产生的比例等等。需要基础设施的支持。</p>
+<ul>
+<li>实时监控, 相对简单，不需要存储<ul>
+<li>资源监控，登录虚拟机，容器，监控内存，CPU, 网络，磁盘 实时统计数据信息。</li>
+<li>业务 proecss 通常暴露监控的数据接口， spring actuator 端口获取监控数据。 arthas 业务参数实时调用监控统计。</li>
+<li>火焰图很好工具，应用火焰图，资源火焰图等。 快速定位问题产生位置。</li>
+</ul>
+</li>
+<li>历史监控, 通常数据存户7天(es 日志数据存储，promethus 监控数据存储，CAT hive 数据存储)<ul>
+<li>日志存储定位<ul>
+<li>ELK 日志系统，通常定位 业务异常，process 服务进程异常，特殊用户异常， 过滤定位特殊请求异常。</li>
+<li>CAT 对服务业务实时统计，<strong>统计</strong>很重要，不同服务依赖 99 线，异常问题数量统计，具体实例的错误比率等。</li>
+<li>SKY WALKING 用来追踪调用链路，对于延时比较高，跨服务很多的， 追踪调用耗时链。</li>
+</ul>
+</li>
+<li>endpoint 落库实时监控数据 (influxdb promethus)<ul>
+<li>系统监控， CPU 使用率， 内存使用率，网路输入输出流量，包数量，链接数量，内存分配数量等等。</li>
+<li>java 服务来说 jvm 监控， old gc 次数，耗时, 不同带的内存大小，占比，线程数量， 直接内存大小等等。</li>
+<li>redis ops 数量，分类统计，内存使用数量， 主从同步情况，输入输出流量，线程数量， 客户端链接数量等等</li>
+<li>envoy, golang 等等 不同 process, 协程，耗时 等等监控。</li>
+<li>业务服务来说，接口请求量，错误率，延时(不同比率延时)。 依赖的redis mq, mysql, 三方服务， http 等等 错误率，延时，QPS 监控。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>个人统计了一些基础监控方式，使用过的，后面想对实时监控命令进行梳理。</p>
 
     </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    Donate
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="joker WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="joker Alipay">
+        <p>Alipay</p>
+      </div>
+
   </div>
-  
-  
-  
+</div>
 
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Monitor/" rel="tag"># Monitor</a>
+              <a href="/tags/Basic/" rel="tag"># Basic</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/09/03/SpringBeanFactoryPostProcessor/" rel="prev" title="bean factory processor">
+      <i class="fa fa-chevron-left"></i> bean factory processor
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
   
 
 
