@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.0.2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.yaoqijun.site","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="uptime CPUload average 系统负荷平均统计，单核 CPU 1.0, 系统刚好执行完成所有任务。 通过 cat &#x2F;proc&#x2F;cpuinfo, grep -c &#39;model name&#39; &#x2F;proc&#x2F;cpuinfo 统计CPU 数量， 一般线上服务 0.7 负载相对有问题了， 需要排查问题原因 12[deploy@sns-jarvis-staging01 ~]$ up">
+<meta property="og:type" content="article">
+<meta property="og:title" content="虚拟机容器基础监听命令(1)">
+<meta property="og:url" content="http://blog.yaoqijun.site/2020/09/07/ServerMonitorBasicCpu/index.html">
+<meta property="og:site_name" content="joker">
+<meta property="og:description" content="uptime CPUload average 系统负荷平均统计，单核 CPU 1.0, 系统刚好执行完成所有任务。 通过 cat &#x2F;proc&#x2F;cpuinfo, grep -c &#39;model name&#39; &#x2F;proc&#x2F;cpuinfo 统计CPU 数量， 一般线上服务 0.7 负载相对有问题了， 需要排查问题原因 12[deploy@sns-jarvis-staging01 ~]$ up">
+<meta property="og:locale">
+<meta property="og:image" content="http://blog.yaoqijun.site/images/20200908/io.png">
+<meta property="article:published_time" content="2020-09-07T09:38:23.000Z">
+<meta property="article:modified_time" content="2020-09-08T17:08:05.771Z">
+<meta property="article:author" content="joker">
+<meta property="article:tag" content="Monitor">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://blog.yaoqijun.site/images/20200908/io.png">
+
+<link rel="canonical" href="http://blog.yaoqijun.site/2020/09/07/ServerMonitorBasicCpu/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-Hans'
+  };
+</script>
+
+  <title>虚拟机容器基础监听命令(1) | joker</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">joker</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">why so serious</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="http://blog.yaoqijun.site/2020/09/07/ServerMonitorBasicCpu/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpg">
+      <meta itemprop="name" content="joker">
+      <meta itemprop="description" content="why so serious">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="joker">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          虚拟机容器基础监听命令(1)
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-09-07 17:38:23" itemprop="dateCreated datePublished" datetime="2020-09-07T17:38:23+08:00">2020-09-07</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-09-09 01:08:05" itemprop="dateModified" datetime="2020-09-09T01:08:05+08:00">2020-09-09</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">In</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">技术</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/%E7%9B%91%E6%8E%A7/" itemprop="url" rel="index"><span itemprop="name">监控</span></a>
+                </span>
+                  , 
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%8A%80%E6%9C%AF/%E7%9B%91%E6%8E%A7/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h4 id="uptime-CPU"><a href="#uptime-CPU" class="headerlink" title="uptime CPU"></a>uptime CPU</h4><p>load average 系统负荷平均统计，单核 CPU 1.0, 系统刚好执行完成所有任务。 通过 <code>cat /proc/cpuinfo, grep -c &#39;model name&#39; /proc/cpuinfo</code> 统计CPU 数量， 一般线上服务 0.7 负载相对有问题了， 需要排查问题原因</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[deploy@sns-jarvis-staging01 ~]$ uptime</span><br><span class="line">19:07:32 (当前时间) up 671 days, 19:46, (运行时间)  2 users,(用户数量)  load average: 49.57, 45.00, 41.24 (平均负载)</span><br></pre></td></tr></table></figure>
+
+<h4 id="vmstat-CPU"><a href="#vmstat-CPU" class="headerlink" title="vmstat CPU"></a>vmstat CPU</h4><p>务器的CPU使用率，内存使用，虚拟内存交换情况,IO读写情况。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[deploy@sns-jarvis-staging02 ~/cron-mqworker_yqj1]$ vmstat 2</span><br><span class="line">procs -----------memory---------- ---swap-- -----io---- -system-- ------cpu-----</span><br><span class="line"> r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st</span><br><span class="line">53  0      0 1829688 546056 5312848    0    0    22   103    0    0 27 12 60  0  0</span><br><span class="line">24  0      0 1764004 546056 5312872    0    0     0   196 51070 317194 31 14 55  0  0</span><br><span class="line">71  0      0 1748140 546056 5312880    0    0     0    74 48609 299565 41 12 47  0  0</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>进程相关<ul>
+<li>r 运行进程数量, 核对CPU 数量对应</li>
+<li>b 阻塞进程数量</li>
+</ul>
+</li>
+<li>内存相关<ul>
+<li>swpd 系统内存不够时候， 会置换出内存模块，进入磁盘中， &gt; 0 时候， 说明内存不足了。 通常线上服务是关闭内存置换的。</li>
+<li>free 这里空闲内存大小， <strong>注意 不是真实的可用内存，Linux 预先占用所有内存等待比例释放内存</strong> 关注度不高</li>
+<li>buffer 缓冲区， 进程读写文件时候，预先写入缓冲区， 什么时候刷入磁盘， 等待操作系统的控制。可以 sync 强制刷盘操作。保证数据录入正确。</li>
+<li>cache 为了提高数据读取性能，防止重复读取磁盘造成，程序运行速度下降。</li>
+</ul>
+</li>
+<li>磁盘IO相关<ul>
+<li>si so 磁盘中读取，写入虚拟内存的数据大小，大于 0, 同样内存泄露</li>
+<li>bi bo 所有的块设备， in, out 数量，接近0，不然IO 过于频繁。</li>
+<li>in: cpu 中断次数， cs: cpu 上线文切换次数</li>
+<li>us: 用户态CPU 时间比例， sy 系统态时间比率， id cpu 空闲比率。 us + sy + id = 100</li>
+<li>wa 系统等待 IO 时间，&gt; 0, IO 影响系统等待</li>
+<li>st 容器化系统偷取时间 stolen time</li>
+</ul>
+</li>
+</ul>
+<h4 id="mpstat-CPU"><a href="#mpstat-CPU" class="headerlink" title="mpstat CPU"></a>mpstat CPU</h4><p>Multiprocessor Statistics 缩写，监控多线程 CPU 状态。 命令格式 <code>mpstat [-P &#123;cpu|ALL&#125;] [internal [count]]</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">[deploy@sns-jarvis-staging02 ~]$ mpstat -P ALL 2 10</span><br><span class="line">Linux 3.10.0-514.10.2.el7.x86_64 (sns-jarvis-staging02)     09/08/2020     _x86_64_    (8 CPU)</span><br><span class="line"></span><br><span class="line">01:10:14 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest  %gnice   %idle</span><br><span class="line">01:10:16 AM  all   46.17    0.00   25.54    0.13    0.00    0.19    0.00    0.00    0.00   27.97</span><br><span class="line">01:10:16 AM    0   56.85    0.00   23.35    1.02    0.00    0.00    0.00    0.00    0.00   18.78</span><br><span class="line">01:10:16 AM    1   50.00    0.00   23.98    0.00    0.00    0.00    0.00    0.00    0.00   26.02</span><br><span class="line">01:10:16 AM    2   43.01    0.00   27.46    0.00    0.00    0.00    0.00    0.00    0.00   29.53</span><br><span class="line">01:10:16 AM    3   39.38    0.00   27.98    0.00    0.00    0.00    0.00    0.00    0.00   32.64</span><br><span class="line">01:10:16 AM    4   30.61    0.00   15.82    0.51    0.00    0.51    0.00    0.00    0.00   52.55</span><br><span class="line">01:10:16 AM    5   29.02    0.00   34.20    0.00    0.00    1.04    0.00    0.00    0.00   35.75</span><br><span class="line">01:10:16 AM    6   60.61    0.00   20.71    0.00    0.00    0.00    0.00    0.00    0.00   18.69</span><br><span class="line">01:10:16 AM    7   58.00    0.00   31.50    0.00    0.00    0.50    0.00    0.00    0.00   10.00</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>返回结果Linux 内核版本， cpu 核数， 和每个CPU 的详细状态信息。 参数含义</p>
+<ul>
+<li>%user      在internal时间段里，用户态的CPU时间(%)，不包含nice值为负进程  (usr/total)*100</li>
+<li>%nice      在internal时间段里，nice值为负进程的CPU时间(%)   (nice/total)*100</li>
+<li>%sys       在internal时间段里，内核时间(%)       (system/total)*100</li>
+<li>%iowait    在internal时间段里，硬盘IO等待时间(%) (iowait/total)*100</li>
+<li>%irq       在internal时间段里，硬中断时间(%)     (irq/total)*100</li>
+<li>%soft      在internal时间段里，软中断时间(%)     (softirq/total)*100</li>
+<li>%idle      在internal时间段里，CPU除去等待磁盘IO操作外的因为任何原因而空闲的时间闲置时间(%) (idle/total)*100</li>
+</ul>
+<h4 id="free-MEM"><a href="#free-MEM" class="headerlink" title="free MEM"></a>free MEM</h4><p>内存监控 free -m 监控内存使用情况， 通过M 单位显示内存结构， linux 内存占用思想 used = used - buffer - cached , free = free + buffer = cache 真正内存大小。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[deploy@sns-jarvis-staging02 ~]$ free -m</span><br><span class="line">              total        used        free      shared  buff/cache   available</span><br><span class="line">Mem:          32013       24718        1618          13        5676        6733</span><br><span class="line">Swap:             0           0           0</span><br></pre></td></tr></table></figure>
+
+<h4 id="iostat-IO"><a href="#iostat-IO" class="headerlink" title="iostat IO"></a>iostat IO</h4><p>iostat方便查看CPU、网卡、tty设备、磁盘、CD-ROM 等等设备的活动情况, 负载信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">[deploy@sns-jarvis-staging02 ~]$ iostat</span><br><span class="line">Linux 3.10.0-514.10.2.el7.x86_64 (sns-jarvis-staging02) 09/08/2020 _x86_64_(8 CPU)</span><br><span class="line"></span><br><span class="line">avg-cpu:  %user   %nice %system %iowait  %steal   %idle</span><br><span class="line">          27.39    0.00   12.20    0.12    0.00   60.29</span><br><span class="line"></span><br><span class="line">Device:            tps    kB_read/s    kB_wrtn/s    kB_read    kB_wrtn</span><br><span class="line">vda              30.91       105.07       483.29 8105871565 37285428448</span><br><span class="line">vdb               6.84        65.00       318.41 5014628833 24564686976</span><br><span class="line"></span><br><span class="line">[deploy@sns-jarvis-staging02 ~]$ iostat -x</span><br><span class="line">Linux 3.10.0-514.10.2.el7.x86_64 (sns-jarvis-staging02) 09/08/2020 _x86_64_(8 CPU)</span><br><span class="line"></span><br><span class="line">avg-cpu:  %user   %nice %system %iowait  %steal   %idle</span><br><span class="line">          27.39    0.00   12.20    0.12    0.00   60.29</span><br><span class="line"></span><br><span class="line">Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await r_await w_await  svctm  %util</span><br><span class="line">vda               0.02    45.59    3.34   27.57   105.07   483.29    38.07     0.01    0.32    5.34    1.73   0.32   0.98</span><br><span class="line">vdb               0.00     4.33    2.33    4.50    65.00   318.40   112.18     0.02    2.73    3.07    2.55   0.46   0.31</span><br></pre></td></tr></table></figure>
+
+<p>命令参数定义<br>-C 显示CPU使用情况<br>-d 显示磁盘使用情况<br>-k 以 KB 为单位显示<br>-m 以 M 为单位显示<br>-N 显示磁盘阵列(LVM) 信息<br>-n 显示NFS 使用情况<br>-p[磁盘] 显示磁盘和分区的情况<br>-t 显示终端和CPU的信息<br>-x 显示详细信息<br>-V 显示版本信息</p>
+<p>avg-cpu 这个上面定义相同, 不再说明，网上load 下来的图片 <img src="/images/20200908/io.png" alt="io"></p>
+<ul>
+<li>rrqm/s， wrqm/s 每秒进行 merge 的读，写操作数量， 就是 rmerge/s，wmerge/s<ul>
+<li>说明一下，app 多进程通过 内核调用，写入虚拟文件系统数据。 操作系统通过块设备，bio阻塞写入 或者 IO调度器写入队列，调用驱动写入磁盘中。 这个时候会对相邻块写入进行合并操作。</li>
+</ul>
+</li>
+<li>r/s w/s 每秒完成 IO 的读写次数</li>
+<li>rsec/s wsec/s 每秒读写扇区数</li>
+<li>rkB/s wkB/s 每秒读写写入 KB 数量</li>
+<li>avgrq-sz：平均每次设备IO操作的数据大小（扇区）；平均单次IO大小。</li>
+<li>avgqu-sz：平均IO队列长度。</li>
+<li>await：从请求磁盘操作到系统完成处理，每次请求的平均消耗时间，包括请求队列等待时间；平均IO响应时间（毫秒）。<ul>
+<li>r_await， w_await 读写等待时间</li>
+</ul>
+</li>
+<li>svctm：平均每次设备IO操作的服务时间（毫秒）<ul>
+<li>通过图片，操作系统等地时间， 一个是 块设备处理时间</li>
+</ul>
+</li>
+<li>%util：一秒中有百分之多少的时间用于 I/O 操作，即被io消耗的cpu百分比。</li>
+</ul>
+<p>正常情况下svctm应该是小于await值的，而svctm的大小和磁盘性能有关，CPU、内存的负荷也会对svctm值造成影响，过多的请求也会间接的导致svctm值的增加。await值的大小一般取决于svctm的值和IO队列的长度以及IO请求模式，如果scvtm比较接近await，说明IO几乎没有等待时间；如果await远大于svctm，说明IO请求队列太长，IO响应太慢，则需要进行必要优化。<br>如果%util接近100%，说明产生的IO请求太多，IO系统已经满负荷，该磁盘可能存在瓶颈。<br>队列长度(avgqu-sz)也可作为衡量系统 I/O 负荷的指标，但由于 avgqu-sz 是按照单位时间的平均值，所以不能反映瞬间的 I/O 泛洪，如果avgqu-sz比较大，则说明有大量IO在等待。</p>
+<h4 id="top-htop"><a href="#top-htop" class="headerlink" title="top htop"></a>top htop</h4><p>统计CPU 内存的使用率，监控状态是进程， 通过 <code>top -Hp $&#123;processId&#125;</code> 监控运行进程状态。 htop 对应升级版本，进程角度监控运行状态。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">[deploy@sns-jarvis-staging02 ~]$ top</span><br><span class="line">top - 00:26:03 up 893 days, 11:25,  1 user,  load average: 22.49, 22.70, 25.52  （当前时间, 系统运行时间，用户数量，CPU 负载）</span><br><span class="line">Tasks: 343 total,   2 running, 341 sleeping,   0 stopped,   0 zombie  （process 不同状态进程数量）</span><br><span class="line"><span class="meta">%</span><span class="bash">Cpu(s): 43.5 us, 14.6 sy,  0.0 ni, 41.5 id,  0.1 wa,  0.0 hi,  0.3 si,  0.0 st （用户时间， 系统时间， 改变优先级占比， 空闲占比， IO等待，软硬中断）</span></span><br><span class="line">KiB Mem : 32781488 total,  3090220 free, 26196908 used,  3494360 buff/cache （缓存Cache 相关）</span><br><span class="line">KiB Swap:        0 total,        0 free,        0 used.  6007408 avail Mem  （swap 系统硬盘缓存相关）</span><br><span class="line"></span><br><span class="line">  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND</span><br><span class="line"> 5068 deploy    20   0 3535500 396468  12860 S 222.9  1.2   0:08.84 java</span><br><span class="line">15860 deploy    20   0 6428388 727608      0 S  31.9  2.2  23159:40 java</span><br><span class="line">20794 deploy    20   0 7056876 1.096g  14684 S  13.3  3.5 120:07.32 java</span><br><span class="line"> 3290 deploy    20   0 4609100 559288   3892 S  12.3  1.7   1440:04 java</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>M 按照内存排序，  m 显示内存信息，</li>
+<li>P 按照 CPU 使用排序，</li>
+<li>T cpu 占用累计时间排序</li>
+<li>s 刷新时间间隔，  second  默认单位</li>
+<li>K  删除 对应进程。</li>
+<li>H thread 线程模式， 监控线程执行状态</li>
+</ul>
+<h4 id="dmesg"><a href="#dmesg" class="headerlink" title="dmesg"></a>dmesg</h4><p>系统日志监控方式，对于挂了进程， 失败进程监控运行日志。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div>坚持原创技术分享，您的支持将鼓励我继续创作！</div>
+  <button onclick="var qr = document.getElementById('qr'); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    Donate
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="joker WeChat Pay">
+        <p>WeChat Pay</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="joker Alipay">
+        <p>Alipay</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Monitor/" rel="tag"># Monitor</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/09/07/ServerMonitorBasic/" rel="prev" title="微服务监控排查">
+      <i class="fa fa-chevron-left"></i> 微服务监控排查
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/09/09/ServerMonitorBasicCpu2/" rel="next" title="ServerMonitorBasicCpu2">
+      ServerMonitorBasicCpu2 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#uptime-CPU"><span class="nav-number">1.</span> <span class="nav-text">uptime CPU</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#vmstat-CPU"><span class="nav-number">2.</span> <span class="nav-text">vmstat CPU</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#mpstat-CPU"><span class="nav-number">3.</span> <span class="nav-text">mpstat CPU</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#free-MEM"><span class="nav-number">4.</span> <span class="nav-text">free MEM</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#iostat-IO"><span class="nav-number">5.</span> <span class="nav-text">iostat IO</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#top-htop"><span class="nav-number">6.</span> <span class="nav-text">top htop</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#dmesg"><span class="nav-number">7.</span> <span class="nav-text">dmesg</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="joker"
+      src="/images/avatar.jpg">
+  <p class="site-author-name" itemprop="name">joker</p>
+  <div class="site-description" itemprop="description">why so serious</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/LiveAlone" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;LiveAlone" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:yaoqijunmail@foxmail.com" title="E-Mail → mailto:yaoqijunmail@foxmail.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">joker</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
