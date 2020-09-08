@@ -1,6 +1,5 @@
 ---
-title: 虚拟机容器基础监听命令
-date: 2020-09-07 17:38:23
+title: 虚拟机容器基础监听命令(1)
 tags:
   - Monitor
   - Linux
@@ -8,7 +7,9 @@ categories:
   - 技术
   - 监控
   - Linux
+date: 2020-09-07 17:38:23
 ---
+
 
 #### uptime CPU
 
@@ -146,3 +147,33 @@ avg-cpu 这个上面定义相同, 不再说明，网上load 下来的图片 ![io
 正常情况下svctm应该是小于await值的，而svctm的大小和磁盘性能有关，CPU、内存的负荷也会对svctm值造成影响，过多的请求也会间接的导致svctm值的增加。await值的大小一般取决于svctm的值和IO队列的长度以及IO请求模式，如果scvtm比较接近await，说明IO几乎没有等待时间；如果await远大于svctm，说明IO请求队列太长，IO响应太慢，则需要进行必要优化。
 如果%util接近100%，说明产生的IO请求太多，IO系统已经满负荷，该磁盘可能存在瓶颈。
 队列长度(avgqu-sz)也可作为衡量系统 I/O 负荷的指标，但由于 avgqu-sz 是按照单位时间的平均值，所以不能反映瞬间的 I/O 泛洪，如果avgqu-sz比较大，则说明有大量IO在等待。
+
+#### top htop
+
+统计CPU 内存的使用率，监控状态是进程， 通过 ```top -Hp ${processId}``` 监控运行进程状态。 htop 对应升级版本，进程角度监控运行状态。
+
+```shell
+[deploy@sns-jarvis-staging02 ~]$ top
+top - 00:26:03 up 893 days, 11:25,  1 user,  load average: 22.49, 22.70, 25.52  （当前时间, 系统运行时间，用户数量，CPU 负载）
+Tasks: 343 total,   2 running, 341 sleeping,   0 stopped,   0 zombie  （process 不同状态进程数量）
+%Cpu(s): 43.5 us, 14.6 sy,  0.0 ni, 41.5 id,  0.1 wa,  0.0 hi,  0.3 si,  0.0 st （用户时间， 系统时间， 改变优先级占比， 空闲占比， IO等待，软硬中断）
+KiB Mem : 32781488 total,  3090220 free, 26196908 used,  3494360 buff/cache （缓存Cache 相关）
+KiB Swap:        0 total,        0 free,        0 used.  6007408 avail Mem  （swap 系统硬盘缓存相关）
+
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+ 5068 deploy    20   0 3535500 396468  12860 S 222.9  1.2   0:08.84 java
+15860 deploy    20   0 6428388 727608      0 S  31.9  2.2  23159:40 java
+20794 deploy    20   0 7056876 1.096g  14684 S  13.3  3.5 120:07.32 java
+ 3290 deploy    20   0 4609100 559288   3892 S  12.3  1.7   1440:04 java
+```
+
+- M 按照内存排序，  m 显示内存信息，
+- P 按照 CPU 使用排序，
+- T cpu 占用累计时间排序
+- s 刷新时间间隔，  second  默认单位
+- K  删除 对应进程。
+- H thread 线程模式， 监控线程执行状态
+
+#### dmesg
+
+系统日志监控方式，对于挂了进程， 失败进程监控运行日志。
