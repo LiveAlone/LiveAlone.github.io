@@ -178,7 +178,7 @@
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
           
-            <a href="/2020/09/09/ServerMonitorBasicCpu2/" class="post-title-link" itemprop="url">ServerMonitorBasicCpu2</a>
+            <a href="/2020/09/09/ServerMonitorBasicCpu2/" class="post-title-link" itemprop="url">虚拟机容器基础监听命令(2)</a>
         </h2>
 
         <div class="post-meta">
@@ -189,7 +189,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2020-09-09 00:52:52 / Modified: 01:08:16" itemprop="dateCreated datePublished" datetime="2020-09-09T00:52:52+08:00">2020-09-09</time>
+              <time title="Created: 2020-09-09 00:52:52 / Modified: 17:33:37" itemprop="dateCreated datePublished" datetime="2020-09-09T00:52:52+08:00">2020-09-09</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -220,8 +220,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h4 id="ss"><a href="#ss" class="headerlink" title="ss"></a>ss</h4><p>相关命令 </p>
-<ul>
+          <h4 id="ss"><a href="#ss" class="headerlink" title="ss"></a>ss</h4><ul>
 <li><code>ss -antp &gt; $DUMP_DIR/ss.dump 2&gt;&amp;1</code> Dump 所有的tpc 链接方式</li>
 <li><code>ss -s</code> summary  显示 socket 统计信息， 链接数量， 防止端口占用完。<ul>
 <li>ss -l 显示本地打开的所有端口</li>
@@ -253,7 +252,24 @@
 </ul>
 <p>一般使用方式 通过grep 过滤不同端口的监控状态信息。-r 获取路由表配置。netstat -lu -lt -lx 不同监听状态</p>
 <h4 id="sar"><a href="#sar" class="headerlink" title="sar"></a>sar</h4><p>系统监控瓶颈分析, todo</p>
-<h4 id="lsof"><a href="#lsof" class="headerlink" title="lsof"></a>lsof</h4><p>端口监听 lsof -i:8080<br>进程资源列表 todo</p>
+<h4 id="lsof"><a href="#lsof" class="headerlink" title="lsof"></a>lsof</h4><p>linux 进程资源管理，通过 lsof 列出所有资源列表，<code>lsof -i:8080， lsof -p 1</code> 监听端口，监听进程资源列表，过滤资源列表等。</p>
+<p>命令条件, 常用 -i -p</p>
+<ul>
+<li>-a 列出打开文件存在的进程</li>
+<li>-c&lt;进程名&gt; 列出指定进程所打开的文件</li>
+<li>-g 列出GID号进程详情</li>
+<li>-d&lt;文件号&gt; 列出占用该文件号的进程</li>
+<li>+d&lt;目录&gt; 列出目录下被打开的文件</li>
+<li>+D&lt;目录&gt; 递归列出目录下被打开的文件</li>
+<li>-n&lt;目录&gt; 列出使用NFS的文件</li>
+<li>-i&lt;条件&gt; 列出符合条件的进程。（4、6、协议、:端口、 @ip ）</li>
+<li>-p&lt;进程号&gt; 列出指定进程号所打开的文件</li>
+<li>-u 列出UID号进程详情</li>
+<li>-h 显示帮助信息</li>
+<li>-v 显示版本信息</li>
+</ul>
+<p>TYPE 指定文件描述类型， 目录设备， 套接字类型。<br>（1）DIR：表示目录<br>（2）CHR：表示字符类型<br>（3）BLK：块设备类型<br>（4）UNIX： UNIX 域套接字<br>（5）FIFO：先进先出 (FIFO) 队列<br>（6）IPv4：网际协议 (IP) 套接字</p>
+<p>FD:  文件描述符类型<br>（1）cwd：表示current work dirctory，即：应用程序的当前工作目录，这是该应用程序启动的目录，除非它本身对这个目录进行更改<br>（2）txt ：该类型的文件是程序代码，如应用程序二进制文件本身或共享库，如上列表中显示的 /sbin/init 程序<br>（3）lnn：library references (AIX);<br>（4）er：FD information error (see NAME column);<br>（5）jld：jail directory (FreeBSD);<br>（6）ltx：shared library text (code and data);<br>（7）mxx ：hex memory-mapped type number xx.<br>（8）m86：DOS Merge mapped file;<br>（9）mem：memory-mapped file;<br>（10）mmap：memory-mapped device;<br>（11）pd：parent directory;<br>（12）rtd：root directory;<br>（13）tr：kernel trace file (OpenBSD);<br>（14）v86  VP/ix mapped file;<br>（15）0：表示标准输入<br>（16）1：表示标准输出<br>（17）2：表示标准错误<br>一般在标准输出、标准错误、标准输入后还跟着文件状态模式：r、w、u等<br>（1）u：表示该文件被打开并处于读取/写入模式<br>（2）r：表示该文件被打开并处于只读模式<br>（3）w：表示该文件被打开并处于<br>（4）空格：表示该文件的状态模式为unknow，且没有锁定<br>（5）-：表示该文件的状态模式为unknow，且被锁定<br>同时在文件状态模式后面，还跟着相关的锁<br>（1）N：for a Solaris NFS lock of unknown type;<br>（2）r：for read lock on part of the file;<br>（3）R：for a read lock on the entire file;<br>（4）w：for a write lock on part of the file;（文件的部分写锁）<br>（5）W：for a write lock on the entire file;（整个文件的写锁）<br>（6）u：for a read and write lock of any length;<br>（7）U：for a lock of unknown type;<br>（8）x：for an SCO OpenServer Xenix lock on part      of the file;<br>（9）X：for an SCO OpenServer Xenix lock on the      entire file;<br>（10）space：if there is no lock.</p>
 
       
     </div>
